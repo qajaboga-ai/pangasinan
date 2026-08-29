@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Richers Admin — Transaction Details #RPS-0891</title>
+<link rel="stylesheet" href="transaction.css">
+</head>
+<body>
+
+<div class="app-frame">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="brand">RICHERS <span>ADMIN</span></div>
+    <ul class="nav-list">
+      <li><a href="dashboard.html" class="nav-item"><span class="icon">📊</span> Dashboard</a></li>
+      <li><a href="transactions.html" class="nav-item active"><span class="icon">📦</span> Transactions & Orders</a></li>
+      <li><a href="index-separated.html" class="nav-item"><span class="icon">🖨️</span> Inventory & Supplies</a></li>
+      <li><a href="customers.html" class="nav-item"><span class="icon">👥</span> Customer Records</a></li>
+      <li><a href="reports.html" class="nav-item"><span class="icon">📈</span> Reports</a></li>
+    </ul>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+    <h1 class="page-title">Transaction Details: <span class="order-id">#RPS-0891</span></h1>
+
+    <!-- Live workflow tracker -->
+    <div class="tracker-card">
+      <div class="tracker-label">Live Production Workflow Tracker</div>
+      <div class="tracker-steps">
+        <div class="tracker-step">
+          <div class="step-title done">✓ Order Received</div>
+          <div class="step-time">10:15 AM</div>
+        </div>
+        <div class="tracker-step">
+          <div class="step-title done">✓ File Verified</div>
+          <div class="step-time">10:22 AM</div>
+        </div>
+        <div class="tracker-step">
+          <div class="step-title current">● Printing In Progress</div>
+          <div class="step-time current">Current Step</div>
+        </div>
+        <div class="tracker-step">
+          <div class="step-title pending">○ Quality Check</div>
+          <div class="step-time">Pending</div>
+        </div>
+        <div class="tracker-step">
+          <div class="step-title pending">○ Ready for Pickup</div>
+          <div class="step-time">Pending</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Two column layout -->
+    <div class="content-grid">
+
+      <!-- Print job items -->
+      <div class="card">
+        <div class="card-title">Print Job Items</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Item Description</th>
+              <th>Qty</th>
+              <th>Unit Price</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>A4 Full Color Print (80gsm)</td>
+              <td>450 pgs</td>
+              <td>₱5.00</td>
+              <td>₱2,250.00</td>
+            </tr>
+            <tr>
+              <td>Ring Binding Heavy Duty</td>
+              <td>10 sets</td>
+              <td>₱45.00</td>
+              <td>₱450.00</td>
+            </tr>
+            <tr>
+              <td>PVC Transparent Covers</td>
+              <td>10 sets</td>
+              <td>₱15.00</td>
+              <td>₱150.00</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Customer & payment info -->
+      <div class="card">
+        <div class="card-title">Customer & Payment Info</div>
+        <div class="info-panel">
+          <div class="info-row"><b>Customer Name:</b> Andrei Joaquin A.</div>
+          <div class="info-row"><b>Contact:</b> +63 917 555 0192</div>
+          <div class="info-row"><b>Account Status:</b> <span class="status-pill status-verified">VERIFIED USER</span></div>
+          <div class="info-row"><b>Payment Method:</b> Cash on Pickup / Over-the-counter</div>
+          <div class="info-row"><b>Payment Status:</b> <span class="status-pill status-unpaid" id="paymentStatus">UNPAID (PENDING PICKUP)</span></div>
+
+          <button class="pay-btn" id="payBtn" onclick="recordPayment()">Record Cash Payment (₱2,850.00)</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function recordPayment() {
+    const btn = document.getElementById('payBtn');
+    const status = document.getElementById('paymentStatus');
+
+    if (btn.classList.contains('paid')) return;
+
+    btn.classList.add('paid');
+    btn.textContent = '✓ Payment Recorded';
+
+    status.textContent = 'PAID';
+    status.classList.remove('status-unpaid');
+    status.classList.add('status-verified');
+  }
+</script>
+
+</body>
+</html>
