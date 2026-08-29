@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Richers Admin — Daily Operations Dashboard</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="brand">RICHERS <span>ADMIN</span></div>
+
+    <a href="dashboard.html" class="nav-item active"><span class="icon">📊</span> Dashboard</a>
+    <a href="transaction-details.html" class="nav-item"><span class="icon">📦</span> Transactions</a>
+    <a href="inventory.html" class="nav-item"><span class="icon">🖨️</span> Inventory &amp; Supplies</a>
+    <a href="customers.html" class="nav-item"><span class="icon">👥</span> Customer Records</a>
+    <a href="reports.html" class="nav-item"><span class="icon">📈</span> Reports</a>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+    <h1 class="page-title">Daily Operations Dashboard</h1>
+    <p class="page-subtitle">Overview for Tuesday, July 28, 2026 — Pasig Main Branch</p>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">Today's Revenue</div>
+        <div class="stat-value blue">₱18,450.00</div>
+        <div class="stat-foot green">▲ +12% from yesterday</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active Orders</div>
+        <div class="stat-value">24 Jobs</div>
+        <div class="stat-foot amber">8 Pending • 16 Printing</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Completed Today</div>
+        <div class="stat-value">42 Jobs</div>
+        <div class="stat-foot green">100% Pickup Rate</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Low Stock Alerts</div>
+        <div class="stat-value red">2 Items</div>
+        <div class="stat-foot red">A4 70gsm Paper, Black Ink</div>
+      </div>
+    </div>
+
+    <div class="pipeline-card">
+      <div class="pipeline-header">Real-Time Order Pipeline</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer Name</th>
+            <th>Job Specification</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="order-id">#RPS-0891</td>
+            <td class="cust-name">Andrei Joaquin A.</td>
+            <td>450p Document Print + Ring Binding (10 copies)</td>
+            <td class="amount">₱2,850.00</td>
+            <td><span class="badge printing">IN PRINTING</span></td>
+            <td><span class="action-link">Update Status</span></td>
+          </tr>
+          <tr>
+            <td class="order-id">#RPS-0890</td>
+            <td class="cust-name">Maria Santos</td>
+            <td>100 Pcs Sticker Label Printing (A3 Glossy)</td>
+            <td class="amount">₱1,200.00</td>
+            <td><span class="badge pickup">FOR PICKUP</span></td>
+            <td><span class="action-link">Mark Paid</span></td>
+          </tr>
+          <tr>
+            <td class="order-id">#RPS-0889</td>
+            <td class="cust-name">Pasig City LGU</td>
+            <td>50 Pcs Tarpaulin Banner (3ft x 5ft)</td>
+            <td class="amount">₱7,500.00</td>
+            <td><span class="badge completed">COMPLETED</span></td>
+            <td><span class="action-link disabled">View Receipt</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</body>
+</html>
