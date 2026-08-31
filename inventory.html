@@ -92,5 +92,122 @@
     </div>
   </div>
 
+
+  
 </body>
+
 </html>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const rows = document.querySelectorAll('.pipeline-card tbody tr');
+  const STEP = 1;
+  const STORAGE_KEY = 'richers_stock_data';
+
+  function loadStockData() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      console.error('Failed to read stock data:', e);
+      return {};
+    }
+  }
+
+  function saveStockData(data) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+      console.error('Failed to save stock data:', e);
+    }
+  }
+
+  const stockData = loadStockData();
+
+  function updateRowStatus(row) {
+    const stockCell = row.querySelector('.stock-value');
+    const thresholdCell = row.children[4];
+    const badgeCell = row.children[5];
+    const actionCell = row.children[6];
+
+    const stock = parseInt(stockCell.textContent, 10);
+    const threshold = parseInt(thresholdCell.textContent, 10);
+
+    const badge = badgeCell.querySelector('.badge');
+    const action = actionCell.querySelector('.action-link');
+
+    if (stock <= threshold) {
+      badge.className = 'badge low-stock';
+      badge.textContent = 'LOW STOCK WARNING';
+      action.className = 'action-link stack';
+      action.innerHTML = 'Reorder<br>Now';
+    } else {
+      badge.className = 'badge sufficient';
+      badge.textContent = 'SUFFICIENT';
+      action.className = 'action-link';
+      action.textContent = 'Restock';
+    }
+  }
+
+  rows.forEach(row => {
+    const itemCode = row.querySelector('.item-code').textContent.trim();
+    const stockCell = row.children[3];
+    const text = stockCell.textContent.trim();
+    const match = text.match(/^(\d+)\s*(.*)$/);
+    if (!match) return;
+
+    let [, num, unit] = match;
+    num = parseInt(num, 10);
+
+    if (stockData[itemCode] !== undefined) {
+      num = stockData[itemCode];
+    } else {
+      stockData[itemCode] = num;
+    }
+
+    stockCell.innerHTML = `
+      <span class="stock-controls">
+        <button class="stock-btn minus" type="button">−</button>
+        <span class="stock-value">${num} ${unit}</span>
+      </span>
+    `;
+
+    const valueEl = stockCell.querySelector('.stock-value');
+    const minusBtn = stockCell.querySelector('.minus');
+    const actionCell = row.children[6];
+    const action = actionCell.querySelector('.action-link');
+
+    function setStock(newVal) {
+      newVal = Math.max(0, newVal);
+      valueEl.textContent = `${newVal} ${unit}`;
+      stockData[itemCode] = newVal;
+      saveStockData(stockData);
+      updateRowStatus(row);
+    }
+
+    minusBtn.addEventListener('click', () => {
+      const current = parseInt(valueEl.textContent, 10);
+      setStock(current - STEP);
+    });
+
+    action.style.cursor = 'pointer';
+    action.addEventListener('click', () => {
+      const current = parseInt(valueEl.textContent, 10);
+      const added = prompt(`Enter quantity to add to stock (current: ${current} ${unit}):`, '50');
+      if (added === null) return; // cancelled
+
+      const addedNum = parseInt(added, 10);
+      if (isNaN(addedNum) || addedNum < 0) {
+        alert('Please enter a valid positive number.');
+        return;
+      }
+
+      setStock(current + addedNum);
+    });
+
+    updateRowStatus(row);
+  });
+
+  saveStockData(stockData);
+});
+</script>
