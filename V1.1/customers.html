@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Richers Admin — Registered Accounts & Verification Center</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="brand">RICHERS <span>ADMIN</span></div>
+
+    <a href="dashboard.html" class="nav-item"><span class="icon">📊</span> Dashboard</a>
+    <a href="transaction-details.html" class="nav-item"><span class="icon">📦</span> Transactions</a>
+    <a href="inventory.html" class="nav-item"><span class="icon">🖨️</span> Inventory &amp; Supplies</a>
+    <a href="customers.html" class="nav-item active"><span class="icon">👥</span> Customer Records</a>
+    <a href="reports.html" class="nav-item"><span class="icon">📈</span> Reports</a>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+    <div class="page-header">
+      <h1 class="page-title">Registered Accounts &amp; Verification Center</h1>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Account ID</th>
+            <th>User Full Name</th>
+            <th>Contact Number / Email</th>
+            <th>System Role</th>
+            <th>Total Orders</th>
+            <th>Verification Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="account-id">USR-1092</td>
+            <td class="user-name">Andrei Joaquin A.</td>
+            <td class="contact">joaquin.andrei@gmail.com</td>
+            <td><span class="role-pill role-customer">CUSTOMER</span></td>
+            <td class="orders">14 Orders</td>
+            <td><span class="status-pill status-verified">VERIFIED IDENTITY</span></td>
+            <td><a href="#" class="action-link">Manage</a></td>
+          </tr>
+          <tr>
+            <td class="account-id">USR-0012</td>
+            <td class="user-name">Elena Ramirez</td>
+            <td class="contact">elena.staff@richers.ph</td>
+            <td><span class="role-pill role-staff">SHOP STAFF</span></td>
+            <td class="orders">N/A (Staff)</td>
+            <td><span class="status-pill status-active">ACTIVE EMPLOYEE</span></td>
+            <td><a href="#" class="action-link">Edit Permissions</a></td>
+          </tr>
+          <tr>
+            <td class="account-id">USR-0002</td>
+            <td class="user-name">Manager Marco</td>
+            <td class="contact">marco.manager@richers.ph</td>
+            <td><span class="role-pill role-manager">MANAGER</span></td>
+            <td class="orders">N/A (Manager)</td>
+            <td><span class="status-pill status-active">ACTIVE EMPLOYEE</span></td>
+            <td><a href="#" class="action-link">Edit Permissions</a></td>
+          </tr>
+          <tr>
+            <td class="account-id">USR-1095</td>
+            <td class="user-name">Kevin Cruz</td>
+            <td class="contact">kevin.cruz99@gmail.com</td>
+            <td><span class="role-pill role-customer">CUSTOMER</span></td>
+            <td class="orders">1 Order</td>
+            <td><span class="status-pill status-pending">PENDING ID CHECK</span></td>
+            <td><a href="#" class="action-link">Verify Account</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</body>
+</html>

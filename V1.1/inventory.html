@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Richers Admin — Printing Paper &amp; Ink Inventory</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="brand">RICHERS <span>ADMIN</span></div>
+
+    <a href="dashboard.html" class="nav-item"><span class="icon">📊</span> Dashboard</a>
+    <a href="transaction-details.html" class="nav-item"><span class="icon">📦</span> Transactions</a>
+    <a href="inventory.html" class="nav-item active"><span class="icon">🖨️</span> Inventory &amp; Supplies</a>
+    <a href="customers.html" class="nav-item"><span class="icon">👥</span> Customer Records</a>
+    <a href="reports.html" class="nav-item"><span class="icon">📈</span> Reports</a>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+    <div class="page-header-row">
+      <div>
+        <h1 class="page-title">Printing Paper &amp; Ink Inventory</h1>
+        <p class="page-subtitle">Monitored stock levels and automatic material consumption tracking</p>
+      </div>
+      <button class="btn-dark">+ Add Supply Item</button>
+    </div>
+
+    <div class="pipeline-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Supply Item Code</th>
+            <th>Item Description</th>
+            <th>Category</th>
+            <th>Current Stock</th>
+            <th>Min Reorder Threshold</th>
+            <th>Stock Level</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="item-code">PAP-A4-80</td>
+            <td>A4 Paper 80gsm (500 Sheets/Ream)</td>
+            <td>Paper Stock</td>
+            <td>142 Reams</td>
+            <td>20 Reams</td>
+            <td><span class="badge sufficient">SUFFICIENT</span></td>
+            <td><span class="action-link">Restock</span></td>
+          </tr>
+          <tr>
+            <td class="item-code">PAP-A4-70</td>
+            <td>A4 Paper 70gsm Standard</td>
+            <td>Paper Stock</td>
+            <td>12 Reams</td>
+            <td>25 Reams</td>
+            <td><span class="badge low-stock">LOW STOCK WARNING</span></td>
+            <td><span class="action-link stack">Reorder<br>Now</span></td>
+          </tr>
+          <tr>
+            <td class="item-code">INK-BLK-EP</td>
+            <td>Epson Black High-Cap Ink Cartridge</td>
+            <td>Ink &amp; Toner</td>
+            <td>3 Bottles</td>
+            <td>5 Bottles</td>
+            <td><span class="badge low-stock">LOW STOCK WARNING</span></td>
+            <td><span class="action-link stack">Reorder<br>Now</span></td>
+          </tr>
+          <tr>
+            <td class="item-code">BND-RNG-12</td>
+            <td>Spiral Ring Binding Coils (12mm)</td>
+            <td>Finishing Materials</td>
+            <td>350 Units</td>
+            <td>100 Units</td>
+            <td><span class="badge sufficient">SUFFICIENT</span></td>
+            <td><span class="action-link">Restock</span></td>
+          </tr>
+          <tr>
+            <td class="item-code">TAR-VIN-13</td>
+            <td>Heavy Duty Vinyl Tarpaulin Roll 13oz</td>
+            <td>Large Format Roll</td>
+            <td>18 Rolls</td>
+            <td>5 Rolls</td>
+            <td><span class="badge sufficient">SUFFICIENT</span></td>
+            <td><span class="action-link">Restock</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  
+</body>
+
+</html>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const rows = document.querySelectorAll('.pipeline-card tbody tr');
+  const STEP = 1;
+  const STORAGE_KEY = 'richers_stock_data';
+
+  function loadStockData() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      console.error('Failed to read stock data:', e);
+      return {};
+    }
+  }
+
+  function saveStockData(data) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+      console.error('Failed to save stock data:', e);
+    }
+  }
+
+  const stockData = loadStockData();
+
+  function updateRowStatus(row) {
+    const stockCell = row.querySelector('.stock-value');
+    const thresholdCell = row.children[4];
+    const badgeCell = row.children[5];
+    const actionCell = row.children[6];
+
+    const stock = parseInt(stockCell.textContent, 10);
+    const threshold = parseInt(thresholdCell.textContent, 10);
+
+    const badge = badgeCell.querySelector('.badge');
+    const action = actionCell.querySelector('.action-link');
+
+    if (stock <= threshold) {
+      badge.className = 'badge low-stock';
+      badge.textContent = 'LOW STOCK WARNING';
+      action.className = 'action-link stack';
+      action.innerHTML = 'Reorder<br>Now';
+    } else {
+      badge.className = 'badge sufficient';
+      badge.textContent = 'SUFFICIENT';
+      action.className = 'action-link';
+      action.textContent = 'Restock';
+    }
+  }
+
+  rows.forEach(row => {
+    const itemCode = row.querySelector('.item-code').textContent.trim();
+    const stockCell = row.children[3];
+    const text = stockCell.textContent.trim();
+    const match = text.match(/^(\d+)\s*(.*)$/);
+    if (!match) return;
+
+    let [, num, unit] = match;
+    num = parseInt(num, 10);
+
+    if (stockData[itemCode] !== undefined) {
+      num = stockData[itemCode];
+    } else {
+      stockData[itemCode] = num;
+    }
+
+    stockCell.innerHTML = `
+      <span class="stock-controls">
+        <button class="stock-btn minus" type="button">−</button>
+        <span class="stock-value">${num} ${unit}</span>
+      </span>
+    `;
+
+    const valueEl = stockCell.querySelector('.stock-value');
+    const minusBtn = stockCell.querySelector('.minus');
+    const actionCell = row.children[6];
+    const action = actionCell.querySelector('.action-link');
+
+    function setStock(newVal) {
+      newVal = Math.max(0, newVal);
+      valueEl.textContent = `${newVal} ${unit}`;
+      stockData[itemCode] = newVal;
+      saveStockData(stockData);
+      updateRowStatus(row);
+    }
+
+    minusBtn.addEventListener('click', () => {
+      const current = parseInt(valueEl.textContent, 10);
+      setStock(current - STEP);
+    });
+
+    action.style.cursor = 'pointer';
+    action.addEventListener('click', () => {
+      const current = parseInt(valueEl.textContent, 10);
+      const added = prompt(`Enter quantity to add to stock (current: ${current} ${unit}):`, '50');
+      if (added === null) return; // cancelled
+
+      const addedNum = parseInt(added, 10);
+      if (isNaN(addedNum) || addedNum < 0) {
+        alert('Please enter a valid positive number.');
+        return;
+      }
+
+      setStock(current + addedNum);
+    });
+
+    updateRowStatus(row);
+  });
+
+  saveStockData(stockData);
+});
+</script>

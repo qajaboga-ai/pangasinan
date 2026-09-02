@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Richers Printing — Configure Printing Job</title>
+<link rel="stylesheet" href="order.css">
+</head>
+<body>
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-brand">RICHERS <span>PRINTING</span></div>
+    <div class="topbar-nav">
+      <a href="#">Services & Pricing</a>
+      <a href="#">Track Order</a>
+      <a href="#">My Orders</a>
+      <span class="topbar-user" id="userGreeting">Hi, Customer</span>
+      <a href="#" id="logoutLink">Logout</a>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+    <div class="content-grid">
+
+      <!-- Configure printing job -->
+      <div class="card">
+        <h2 class="card-title">Configure Printing Job</h2>
+
+        <form id="orderForm">
+          <div class="form-grid">
+            <div class="field-group">
+              <label class="field-label">Service Type</label>
+              <select class="field-select">
+                <option>Document Printing (A4 / Letter)</option>
+                <option>Sticker & Label Printing</option>
+                <option>Large Format Tarpaulin</option>
+                <option>Booklet Binding & Finishing</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Paper Type & Weight</label>
+              <select class="field-select">
+                <option>80gsm Premium White Paper</option>
+                <option>70gsm Standard Paper</option>
+                <option>Glossy Photo Paper</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Color Option</label>
+              <select class="field-select">
+                <option>Full Color (High Quality)</option>
+                <option>Black & White</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Binding / Finishing</label>
+              <select class="field-select">
+                <option>Ring Binding w/ Clear Front Cover</option>
+                <option>Staple Bound</option>
+                <option>No Binding</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Number of Copies</label>
+              <input type="number" class="field-input" value="10" min="1">
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Target Pickup Date</label>
+              <input type="text" class="field-input" value="July 30, 2026 - 3:00 PM">
+            </div>
+          </div>
+
+          <div class="upload-zone">
+            <div class="upload-title">Drag & Drop Printing Files Here</div>
+            <div class="upload-sub">Supported formats: PDF, DOCX, PNG, JPG (Max 50MB)</div>
+            <button type="button" class="browse-btn" id="browseBtn">Browse Local Files</button>
+            <input type="file" id="fileInput" style="display:none">
+            <div class="upload-confirm" id="uploadConfirm"></div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Order breakdown -->
+      <div class="card">
+        <h2 class="card-title">Order Breakdown & Quotation</h2>
+
+        <div class="breakdown-row">
+          <span>450 Pages (Color @ P5.00)</span>
+          <span>₱2,250.00</span>
+        </div>
+        <div class="breakdown-row">
+          <span>10x Ring Binding (@ P45.00)</span>
+          <span>₱450.00</span>
+        </div>
+        <div class="breakdown-row">
+          <span>10x Clear Covers (P15.00)</span>
+          <span>₱150.00</span>
+        </div>
+
+        <div class="total-row">
+          <span>Estimated Total</span>
+          <span class="total-value">₱2,850.00</span>
+        </div>
+
+        <div class="guarantee-note">
+          Anti-Scam Ownership Guarantee: Your account details (Andrei Joaquin A.) will be linked to Transaction #RPS-2026-G801 for shop verification upon store pickup.
+        </div>
+
+        <button type="submit" form="orderForm" class="submit-btn">Submit Printing Order</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="order.js"></script>
+</body>
+</html>
