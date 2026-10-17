@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>Richers Admin — Daily Operations Dashboard</title>
+<script>
+  // Admin only: send everyone else back to login
+  if (localStorage.getItem('richersRole') !== 'admin') {
+    window.location.href = 'login.html';
+  }
+</script>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>

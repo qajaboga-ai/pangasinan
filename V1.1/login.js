@@ -1,3 +1,7 @@
+// login.js
+const ADMIN_EMAIL = 'admin@gmail.com';  // change to your admin email
+const ADMIN_PASSWORD = 'admin123';                // change to your admin password
+
 const form = document.getElementById('loginForm');
 const errorBanner = document.getElementById('errorBanner');
 const emailInput = document.getElementById('email');
@@ -28,7 +32,15 @@ form.addEventListener('submit', function (e) {
     return;
   }
 
-  // Only accounts created via the signup page are valid
+  // 1) Admin login
+  if (email.toLowerCase() === ADMIN_EMAIL.toLowerCase() && password === ADMIN_PASSWORD) {
+    localStorage.removeItem('richersCurrentUser');
+    localStorage.setItem('richersRole', 'admin');
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
+  // 2) Customer login: only accounts created via the signup page are valid
   const accounts = JSON.parse(localStorage.getItem('richersAccounts') || '[]');
 
   const match = accounts.find(function (acc) {
@@ -40,9 +52,7 @@ form.addEventListener('submit', function (e) {
     return;
   }
 
-  // Store the logged-in session
   localStorage.setItem('richersCurrentUser', JSON.stringify(match));
-
-  // Redirect to the customer ordering page
+  localStorage.setItem('richersRole', 'customer');
   window.location.href = 'order.html';
 });
