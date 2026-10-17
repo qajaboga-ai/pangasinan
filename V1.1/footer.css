@@ -1,0 +1,146 @@
+/* ===== footer.css — shared by landing, order (and login/signup if you add it) ===== */
+
+.site-footer {
+  background: #0d1b3e;
+  color: #b8c0d6;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+  margin-top: 56px;
+  position: relative;
+}
+
+/* CMYK strip on top of the footer */
+.site-footer::before {
+  content: "";
+  display: block;
+  height: 5px;
+  background: linear-gradient(90deg, #00a8e8 0 25%, #e6007e 25% 50%, #ffd400 50% 75%, #000000 75% 100%);
+}
+
+.footer-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 44px 32px 28px;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: 36px;
+}
+
+.footer-brand-name {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  color: #ffffff;
+  margin: 0 0 4px;
+}
+
+.footer-brand-name span {
+  color: #5b8dff;
+  font-weight: 500;
+}
+
+.footer-est {
+  display: inline-block;
+  border: 1px solid #3a4a75;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  color: #ffd400;
+  margin-bottom: 12px;
+}
+
+.footer-tagline {
+  margin: 0;
+  max-width: 280px;
+}
+
+.footer-col h4 {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.footer-col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.footer-col li {
+  margin-bottom: 8px;
+}
+
+.footer-col a {
+  color: #b8c0d6;
+  text-decoration: none;
+}
+
+.footer-col a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.footer-bottom {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 16px 32px 24px;
+  border-top: 1px solid #22305a;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: #8892ae;
+}
+
+@media (max-width: 860px) {
+  .footer-inner {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .footer-inner {
+    grid-template-columns: 1fr;
+    padding: 36px 20px 20px;
+  }
+  .footer-bottom {
+    padding: 16px 20px 24px;
+  }
+}
+
+/* ===== Order page: empty state for Order Breakdown & Quotation ===== */
+
+.breakdown-empty {
+  text-align: center;
+  padding: 34px 12px 30px;
+  border: 1.5px dashed #cfd3dc;
+  border-radius: 10px;
+  background: #fafbfc;
+}
+
+.breakdown-empty-icon {
+  font-size: 26px;
+  margin-bottom: 8px;
+  opacity: 0.8;
+}
+
+.breakdown-empty p {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1c2333;
+}
+
+.breakdown-empty span {
+  font-size: 12px;
+  color: #8a91a8;
+}
+
+.total-value.empty {
+  color: #8a91a8;
+}

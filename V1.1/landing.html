@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Richers Printing — Print it. Pick it up. Prove it's yours.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="landing.css">
+<link rel="stylesheet" href="footer.css">
+</head>
+<body>
+
+  <!-- Top nav -->
+  <header class="nav">
+    <a href="landing.html" class="nav-brand">RICHERS <span>PRINTING</span></a>
+    <nav class="nav-links">
+      <a href="#services">Services</a>
+      <a href="#how">How it works</a>
+      <a href="#verified">Why register</a>
+      <a href="login.html" class="nav-login">Login</a>
+      <a href="signup.html" class="btn btn-ink btn-small">Create account</a>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="reg-mark reg-mark-tl" aria-hidden="true"></div>
+    <div class="reg-mark reg-mark-br" aria-hidden="true"></div>
+
+    <div class="hero-copy">
+      <h1 class="hero-title" aria-label="Print it. Pick it up. Prove it's yours.">
+        <span class="line">Print it.</span>
+        <span class="line">Pick it up.</span>
+        <span class="line">Prove it's yours.</span>
+      </h1>
+      <p class="hero-sub">
+        Send your files, watch your job move through the shop, and collect it at our
+        Pasig branch. Every order is tied to your verified account, so nobody else can claim it.
+      </p>
+      <div class="hero-cta">
+        <a href="signup.html" class="btn btn-blue">Create a free account</a>
+        <a href="login.html" class="btn btn-ghost">I already have one</a>
+      </div>
+    </div>
+
+    <div class="hero-visual" aria-hidden="true">
+      <div class="sheet sheet-back"></div>
+      <div class="sheet sheet-mid"></div>
+
+      <div class="ticket" id="ticket">
+        <div class="ticket-head">
+          <div>
+            <div class="ticket-id">#RPS-0891</div>
+            <div class="ticket-job">450 pages + ring binding, 10 copies</div>
+          </div>
+          <div class="ticket-state" id="ticketState">Printing</div>
+        </div>
+        <ol class="ticket-steps" id="ticketSteps">
+          <li class="done">Order received</li>
+          <li class="done">File verified</li>
+          <li class="current">Printing in progress</li>
+          <li>Quality check</li>
+          <li>Ready for pickup</li>
+        </ol>
+        <div class="ticket-bar"><i id="ticketBar"></i></div>
+      </div>
+
+      <div class="dots dots-c"></div>
+      <div class="dots dots-m"></div>
+      <div class="swatch swatch-y">Ring bound</div>
+      <div class="swatch swatch-k">A3 glossy</div>
+    </div>
+  </section>
+
+  <!-- Marquee -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      <span>Document printing</span><span>Sticker &amp; labels</span><span>Tarpaulin banners</span><span>Binding &amp; finishing</span>
+      <span>Document printing</span><span>Sticker &amp; labels</span><span>Tarpaulin banners</span><span>Binding &amp; finishing</span>
+      <span>Document printing</span><span>Sticker &amp; labels</span><span>Tarpaulin banners</span><span>Binding &amp; finishing</span>
+    </div>
+  </div>
+
+  <!-- Services -->
+  <section class="section" id="services">
+    <h2 class="section-title">What we run through the presses</h2>
+
+    <div class="bento">
+      <article class="tile tile-c">
+        <h3>Document printing</h3>
+        <p>Theses, reports, handouts and forms on A4 or Letter. Pick your paper weight, go full color or black and white.</p>
+        <div class="tile-foot">From ₱5.00 per color page</div>
+      </article>
+
+      <article class="tile tile-m">
+        <h3>Sticker &amp; label printing</h3>
+        <p>Product labels and sticker sheets on glossy A3.</p>
+      </article>
+
+      <article class="tile tile-y">
+        <h3>Large format tarpaulin</h3>
+        <p>Banners for events, offices and barangay programs, printed on heavy-duty 13oz vinyl.</p>
+      </article>
+
+      <article class="tile tile-k">
+        <h3>Binding &amp; finishing</h3>
+        <p>Ring binding with clear covers, or staple bound. Ready to submit the same day.</p>
+        <div class="tile-foot">Ring binding from ₱45.00</div>
+      </article>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="section section-tint" id="how">
+    <h2 class="section-title">From file to front counter in four steps</h2>
+
+    <ol class="steps">
+      <li>
+        <div class="step-num">1</div>
+        <h3>Create your account</h3>
+        <p>Sign up with your name, email and contact number. It takes a minute.</p>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <h3>Configure your job</h3>
+        <p>Choose the service, paper, color and finishing. Upload your PDF, DOCX, PNG or JPG.</p>
+      </li>
+      <li>
+        <div class="step-num">3</div>
+        <h3>Track it live</h3>
+        <p>See your order move from file verified, to printing, to quality check.</p>
+      </li>
+      <li>
+        <div class="step-num">4</div>
+        <h3>Pick up and pay</h3>
+        <p>Show your account at the counter and pay over-the-counter when you collect.</p>
+      </li>
+    </ol>
+  </section>
+
+  <!-- Why register -->
+  <section class="section verified" id="verified">
+    <div class="verified-copy">
+      <h2 class="section-title left">Every order has an owner</h2>
+      <p>
+        Fake orders waste paper, ink and everyone's time. That's why ordering needs a
+        registered account. Each job is linked to the person who placed it, and the shop checks that
+        link before handing anything over.
+      </p>
+      <a href="signup.html" class="btn btn-ink">Register to start ordering</a>
+    </div>
+
+    <div class="id-card" aria-hidden="true">
+      <div class="id-top">
+        <span>Ownership record</span>
+        <span class="id-stamp">VERIFIED</span>
+      </div>
+      <div class="id-row"><b>Account</b><span>Your name</span></div>
+      <div class="id-row"><b>Transaction</b><span>#RPS-2026-G801</span></div>
+      <div class="id-row"><b>Pickup</b><span>Pasig Main Branch</span></div>
+      <div class="id-row"><b>Payment</b><span>Cash on pickup</span></div>
+    </div>
+  </section>
+
+  <!-- CTA band -->
+  <section class="cta-band">
+    <h2>Got a file ready?</h2>
+    <p>Create your account and send your first job today.</p>
+    <div class="hero-cta center">
+      <a href="signup.html" class="btn btn-yellow">Create account</a>
+      <a href="login.html" class="btn btn-outline-light">Login</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-col">
+        <div class="footer-brand-name">RICHERS <span>PRINTING</span></div>
+        <div class="footer-est">EST. 2026</div>
+        <p class="footer-tagline">Printing, binding and large-format production with verified, trackable orders.</p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Visit us</h4>
+        <ul>
+          <li>Richers Printing Services</li>
+          <li>Unit 4, Richers Bldg., Shaw Blvd.</li>
+          <li>Pasig City 1600, Metro Manila</li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="tel:+63285550123">(02) 8555 0123</a></li>
+          <li><a href="tel:+639175550123">+63 917 555 0123</a></li>
+          <li><a href="mailto:richersprinting@gmail.com">richersprinting@gmail.com</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Shop hours</h4>
+        <ul>
+          <li>Mon to Sat: 8:00 AM – 7:00 PM</li>
+          <li>Sunday: 9:00 AM – 3:00 PM</li>
+          <li><a href="login.html">Login</a> · <a href="signup.html">Sign up</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>&copy; 2026 Richers Printing Services. All rights reserved.</span>
+      <span>Service Management &amp; Ordering Process System</span>
+    </div>
+  </footer>
+
+  <script src="landing.js"></script>
+</body>
+</html>
