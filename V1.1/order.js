@@ -14,8 +14,9 @@ function formatGreetingName(fullName) {
 }
 
 if (currentUser) {
-  document.getElementById('userGreeting').textContent =
-    'Hi, ' + formatGreetingName(currentUser.fullName) + ' (Customer)';
+  const shortName = formatGreetingName(currentUser.fullName);
+  document.getElementById('userGreeting').textContent = 'Hi, ' + shortName + ' (Customer)';
+  document.getElementById('noteName').textContent = shortName;
 }
 
 // ===== Logout =====
@@ -40,11 +41,32 @@ fileInput.addEventListener('change', function () {
     const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
     uploadConfirm.textContent = '✓ ' + file.name + ' (' + sizeMB + 'MB) Uploaded';
     uploadConfirm.classList.add('show');
+  } else {
+    uploadConfirm.classList.remove('show');
   }
 });
+
+// ===== Basic form check =====
+function getMissing() {
+  const missing = [];
+  [['serviceType', 'service type'], ['paperType', 'paper type'], ['colorOption', 'color option'], ['bindingOption', 'binding / finishing']]
+    .forEach(function (f) {
+      if (!document.getElementById(f[0]).value) missing.push(f[1]);
+    });
+  const copies = parseInt(document.getElementById('copiesInput').value, 10);
+  if (!copies || copies < 1) missing.push('number of copies');
+  if (!document.getElementById('pickupInput').value.trim()) missing.push('pickup date');
+  if (fileInput.files.length === 0) missing.push('your file');
+  return missing;
+}
 
 // ===== Submit order =====
 document.getElementById('orderForm').addEventListener('submit', function (e) {
   e.preventDefault();
+  const missing = getMissing();
+  if (missing.length > 0) {
+    alert('Please complete the form first. Still needed: ' + missing.join(', ') + '.');
+    return;
+  }
   alert('Printing order submitted successfully! You can track its progress under "My Orders".');
 });

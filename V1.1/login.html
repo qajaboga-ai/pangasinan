@@ -2,45 +2,74 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Richers Printing — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="login.css">
 </head>
 <body>
 
-  <div class="brand-header">
-    <h1 class="brand-title">RICHERS PRINTING</h1>
-    <p class="brand-subtitle">Service Management & Ordering Process System</p>
-  </div>
+  <div class="login-shell">
 
-  <div class="login-card">
-    <div class="error-banner" id="errorBanner"></div>
+    <!-- Left: brand panel -->
+    <aside class="login-art">
+      <div class="art-dots art-dots-m" aria-hidden="true"></div>
+      <div class="art-dots art-dots-c" aria-hidden="true"></div>
 
-    <form id="loginForm" novalidate>
-      <div class="field-group">
-        <label class="field-label" for="email">Email Address</label>
-        <input type="email" id="email" class="field-input" placeholder="richersprinting@gmail.com">
+      <a href="landing.html" class="brand-link">
+        <h1 class="brand-title">RICHERS PRINTING</h1>
+        <p class="brand-subtitle">Service Management & Ordering Process System</p>
+      </a>
+
+      <div class="art-copy">
+        <h2 class="art-headline">Welcome back.</h2>
+        <p class="art-text">Log in to start a new print job and check on the ones already on the press.</p>
       </div>
 
-      <div class="field-group">
-        <label class="field-label" for="password">Password</label>
-        <input type="password" id="password" class="field-input" placeholder="">
+      <div class="mini-ticket" aria-hidden="true">
+        <div class="mini-head">
+          <span class="mini-id">#RPS-0891</span>
+          <span class="mini-state">Printing</span>
+        </div>
+        <div class="mini-job">450 pages + ring binding, 10 copies</div>
+        <div class="mini-bar"><i></i></div>
       </div>
+    </aside>
 
-      <div class="options-row">
-        <label class="remember-label">
-          <input type="checkbox" id="rememberDevice"> Remember device
-        </label>
-        <a href="#" class="forgot-link">Forgot Password?</a>
+    <!-- Right: form -->
+    <main class="login-card">
+      <h2 class="form-title">Login to your account</h2>
+
+      <div class="error-banner" id="errorBanner"></div>
+
+      <form id="loginForm" novalidate>
+        <div class="field-group">
+          <label class="field-label" for="email">Email Address</label>
+          <input type="email" id="email" class="field-input" placeholder="richersprinting@gmail.com">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="password">Password</label>
+          <input type="password" id="password" class="field-input" placeholder="">
+        </div>
+
+        <div class="options-row">
+          <label class="remember-label">
+            <input type="checkbox" id="rememberDevice"> Remember device
+          </label>
+          <a href="#" class="forgot-link">Forgot Password?</a>
+        </div>
+
+        <button type="submit" class="login-btn">Login</button>
+      </form>
+
+      <p class="signup-line">Dont Have Account? <a href="signup.html">Create One</a></p>
+
+      <div class="notice-box">
+        ⚠ Account Registration is REQUIRED to prevent fake orders and maintain verified ownership records for RICHERS PRINTING SERVICE.
       </div>
+    </main>
 
-      <button type="submit" class="login-btn">Login</button>
-    </form>
-
-    <p class="signup-line">Dont Have Account? <a href="signup.html">Create One</a></p>
-
-    <div class="notice-box">
-      ⚠ Account Registration is REQUIRED to prevent fake orders and maintain verified ownership records for RICHERS PRINTING SERVICE.
-    </div>
   </div>
 
   <script src="login.js"></script>

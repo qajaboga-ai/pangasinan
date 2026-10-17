@@ -3,13 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <title>Richers Printing — Configure Printing Job</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="footer.css">
 <link rel="stylesheet" href="order.css">
 </head>
 <body>
 
   <!-- Top bar -->
   <div class="topbar">
-    <div class="topbar-brand">RICHERS <span>PRINTING</span></div>
+    <a href="landing.html" class="topbar-brand">RICHERS <span>PRINTING</span></a>
     <div class="topbar-nav">
       <a href="#">Services & Pricing</a>
       <a href="#">Track Order</a>
@@ -21,58 +23,67 @@
 
   <!-- Main content -->
   <div class="main">
+    <div class="page-banner">
+      <h1 class="banner-title">Set up your print job</h1>
+      <p class="banner-sub">Tell us what you need, upload your file, and we'll start once it's verified.</p>
+    </div>
+
     <div class="content-grid">
 
       <!-- Configure printing job -->
       <div class="card">
         <h2 class="card-title">Configure Printing Job</h2>
 
-        <form id="orderForm">
+        <form id="orderForm" novalidate>
           <div class="form-grid">
             <div class="field-group">
               <label class="field-label">Service Type</label>
-              <select class="field-select">
-                <option>Document Printing (A4 / Letter)</option>
-                <option>Sticker & Label Printing</option>
-                <option>Large Format Tarpaulin</option>
-                <option>Booklet Binding & Finishing</option>
+              <select class="field-select" id="serviceType" required>
+                <option value="" selected disabled hidden>See details</option>
+                <option value="doc">Document Printing (A4 / Letter)</option>
+                <option value="sticker">Sticker & Label Printing</option>
+                <option value="tarp">Large Format Tarpaulin</option>
+                <option value="booklet">Booklet Binding & Finishing</option>
               </select>
             </div>
 
             <div class="field-group">
               <label class="field-label">Paper Type & Weight</label>
-              <select class="field-select">
-                <option>80gsm Premium White Paper</option>
-                <option>70gsm Standard Paper</option>
-                <option>Glossy Photo Paper</option>
+              <select class="field-select" id="paperType" required>
+                <option value="" selected disabled hidden>See details</option>
+                <option value="80">80gsm Premium White Paper</option>
+                <option value="70">70gsm Standard Paper</option>
+                <option value="glossy">Glossy Photo Paper</option>
               </select>
             </div>
 
             <div class="field-group">
               <label class="field-label">Color Option</label>
-              <select class="field-select">
-                <option>Full Color (High Quality)</option>
-                <option>Black & White</option>
+              <select class="field-select" id="colorOption" required>
+                <option value="" selected disabled hidden>See details</option>
+                <option value="color">Full Color (High Quality)</option>
+                <option value="bw">Black & White</option>
               </select>
             </div>
 
             <div class="field-group">
               <label class="field-label">Binding / Finishing</label>
-              <select class="field-select">
-                <option>Ring Binding w/ Clear Front Cover</option>
-                <option>Staple Bound</option>
-                <option>No Binding</option>
+              <select class="field-select" id="bindingOption" required>
+                <option value="" selected disabled hidden>See details</option>
+                <option value="ring">Ring Binding w/ Clear Front Cover</option>
+                <option value="staple">Staple Bound</option>
+                <option value="none">No Binding</option>
               </select>
             </div>
 
             <div class="field-group">
-              <label class="field-label">Number of Copies</label>
-              <input type="number" class="field-input" value="10" min="1">
+              <label class="field-label" for="copiesInput">Number of Copies</label>
+              <input type="number" class="field-input" id="copiesInput" value="10" min="1">
             </div>
 
             <div class="field-group">
-              <label class="field-label">Target Pickup Date</label>
-              <input type="text" class="field-input" value="July 30, 2026 - 3:00 PM">
+              <label class="field-label" for="pickupInput">Target Pickup Date</label>
+              <input type="text" class="field-input" id="pickupInput" value="July 30, 2026 - 3:00 PM">
             </div>
           </div>
 
@@ -86,30 +97,12 @@
         </form>
       </div>
 
-      <!-- Order breakdown -->
+      <!-- Submit -->
       <div class="card">
-        <h2 class="card-title">Order Breakdown & Quotation</h2>
-
-        <div class="breakdown-row">
-          <span>450 Pages (Color @ P5.00)</span>
-          <span>₱2,250.00</span>
-        </div>
-        <div class="breakdown-row">
-          <span>10x Ring Binding (@ P45.00)</span>
-          <span>₱450.00</span>
-        </div>
-        <div class="breakdown-row">
-          <span>10x Clear Covers (P15.00)</span>
-          <span>₱150.00</span>
-        </div>
-
-        <div class="total-row">
-          <span>Estimated Total</span>
-          <span class="total-value">₱2,850.00</span>
-        </div>
+        <h2 class="card-title">Submit Your Order</h2>
 
         <div class="guarantee-note">
-          Anti-Scam Ownership Guarantee: Your account details (Andrei Joaquin A.) will be linked to Transaction #RPS-2026-G801 for shop verification upon store pickup.
+          Anti-Scam Ownership Guarantee: Your account details (<b id="noteName">your account</b>) will be linked to your transaction number for shop verification upon store pickup.
         </div>
 
         <button type="submit" form="orderForm" class="submit-btn">Submit Printing Order</button>
@@ -117,6 +110,44 @@
 
     </div>
   </div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-col">
+        <div class="footer-brand-name">RICHERS <span>PRINTING</span></div>
+        <div class="footer-est">EST. 2026</div>
+        <p class="footer-tagline">Printing, binding and large-format production with verified, trackable orders.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Visit us</h4>
+        <ul>
+          <li>Richers Printing Services</li>
+          <li>Unit 4, Richers Bldg., Shaw Blvd.</li>
+          <li>Pasig City 1600, Metro Manila</li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="tel:+63285550123">(02) 8555 0123</a></li>
+          <li><a href="tel:+639175550123">+63 917 555 0123</a></li>
+          <li><a href="mailto:richersprinting@gmail.com">richersprinting@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Shop hours</h4>
+        <ul>
+          <li>Mon to Sat: 8:00 AM – 7:00 PM</li>
+          <li>Sunday: 9:00 AM – 3:00 PM</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 Richers Printing Services. All rights reserved.</span>
+      <span>Service Management &amp; Ordering Process System</span>
+    </div>
+  </footer>
 
   <script src="order.js"></script>
 </body>

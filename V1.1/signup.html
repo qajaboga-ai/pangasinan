@@ -2,18 +2,43 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Richers Printing — Create Your Account</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="signup.css">
 </head>
 <body>
 
-  <div class="brand-header">
-    <h1 class="brand-title">RICHERS PRINTING</h1>
-    <p class="brand-subtitle">Service Management & Ordering Process System</p>
-  </div>
+  <div class="signup-shell">
 
-  <div class="signup-card">
-    <h2 class="signup-title">Create Your Account</h2>
+    <!-- Left: brand panel -->
+    <aside class="signup-art">
+      <div class="art-dots art-dots-m" aria-hidden="true"></div>
+      <div class="art-dots art-dots-c" aria-hidden="true"></div>
+
+      <a href="landing.html" class="brand-link">
+        <h1 class="brand-title">RICHERS PRINTING</h1>
+        <p class="brand-subtitle">Service Management & Ordering Process System</p>
+      </a>
+
+      <div class="art-copy">
+        <h2 class="art-headline">Join the shop.</h2>
+        <p class="art-text">One account, and every print job you send is linked to you. Track it live and pick it up with confidence.</p>
+      </div>
+
+      <div class="mini-ticket" aria-hidden="true">
+        <div class="mini-head">
+          <span class="mini-id">Ownership record</span>
+          <span class="mini-state">Verified</span>
+        </div>
+        <div class="mini-job">Linked to your account, ready for pickup at Pasig Main Branch</div>
+        <div class="mini-bar"><i></i></div>
+      </div>
+    </aside>
+
+    <!-- Right: form -->
+    <main class="signup-card">
+    <h2 class="signup-title">Create your account</h2>
 
     <form id="signupForm" novalidate>
       <div class="field-group">
@@ -61,6 +86,8 @@
     <div class="notice-box">
       ⚠ Account Registration is REQUIRED to prevent fake orders and maintain verified ownership records for RICHERS PRINTING SERVICE.
     </div>
+    </main>
+
   </div>
 
   <!-- Terms of Service Modal -->

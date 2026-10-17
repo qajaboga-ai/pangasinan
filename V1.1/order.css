@@ -236,3 +236,213 @@ body {
 .submit-btn:active {
   transform: scale(0.98);
 }
+
+/* ===== order-lively.css =====
+   Load AFTER order.css. Only adds/overrides styling, so order.css and order.js stay as they are. */
+
+:root {
+  --ink: #0d1b3e;
+  --cyan: #00a8e8;
+  --magenta: #e6007e;
+  --yellow: #ffd400;
+  --blue: #2f6fed;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+}
+
+body {
+  background:
+    radial-gradient(circle at 100% 0, rgba(0, 168, 232, 0.10) 0 180px, transparent 181px),
+    radial-gradient(circle at 0 420px, rgba(230, 0, 126, 0.07) 0 160px, transparent 161px),
+    #f6f7fb;
+}
+
+/* ---------- Top bar ---------- */
+.topbar {
+  background: rgba(246, 247, 251, 0.92);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.topbar-brand {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  color: var(--ink);
+}
+.topbar-brand span { color: var(--blue); }
+.topbar-user {
+  background: var(--yellow);
+  color: var(--ink);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12.5px;
+}
+.topbar-user span { color: var(--ink); }
+
+/* ---------- Banner ---------- */
+.page-banner {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto 26px;
+  padding: 30px 34px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+}
+.page-banner::before {
+  content: "";
+  position: absolute;
+  right: -40px;
+  top: -40px;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background-image: radial-gradient(var(--magenta) 28%, transparent 30%);
+  background-size: 15px 15px;
+  opacity: 0.85;
+}
+.page-banner::after {
+  content: "";
+  position: absolute;
+  right: 130px;
+  bottom: -60px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background-image: radial-gradient(var(--cyan) 28%, transparent 30%);
+  background-size: 15px 15px;
+  opacity: 0.8;
+}
+.banner-title {
+  position: relative;
+  z-index: 1;
+  font-family: var(--display);
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  line-height: 1.1;
+  margin: 0 0 6px;
+}
+.banner-sub {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  max-width: 480px;
+  color: #b8c0d6;
+  font-size: 14.5px;
+}
+
+.main { padding-top: 8px; }
+.content-grid { max-width: 1200px; margin: 0 auto; }
+
+/* ---------- Cards ---------- */
+.card {
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  box-shadow: 7px 7px 0 var(--cyan);
+}
+.content-grid > .card:nth-child(2) { box-shadow: 7px 7px 0 var(--yellow); }
+
+.card-title {
+  font-family: var(--display);
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+
+.field-label { color: var(--ink); }
+.field-input:focus,
+.field-select:focus {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(0, 168, 232, 0.3);
+}
+
+/* ---------- Upload zone ---------- */
+.upload-zone {
+  position: relative;
+  border: 2px dashed var(--ink);
+  border-radius: 14px;
+  background:
+    radial-gradient(rgba(0, 168, 232, 0.18) 26%, transparent 28%) 0 0 / 14px 14px,
+    #ffffff;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+.upload-zone:hover { transform: translateY(-2px); }
+.upload-title { font-family: var(--display); font-size: 17px; font-weight: 800; }
+.browse-btn {
+  background: var(--yellow);
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  font-weight: 800;
+  transition: transform 0.1s ease;
+}
+.browse-btn:hover { background: #ffe14d; }
+.browse-btn:active { transform: scale(0.96); }
+
+/* ---------- Order breakdown as a receipt ---------- */
+.receipt {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  margin-bottom: 14px;
+}
+.receipt::after {
+  content: "";
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  bottom: -12px;
+  height: 12px;
+  background:
+    linear-gradient(135deg, #ffffff 50%, transparent 50%) 0 0 / 16px 16px,
+    linear-gradient(225deg, #ffffff 50%, transparent 50%) 0 0 / 16px 16px;
+  background-repeat: repeat-x;
+  filter: drop-shadow(7px 5px 0 var(--yellow));
+}
+.receipt { position: relative; }
+
+.breakdown-empty {
+  border-color: var(--ink);
+  background:
+    repeating-linear-gradient(135deg, transparent 0 10px, rgba(13, 27, 62, 0.035) 10px 20px),
+    #ffffff;
+}
+.breakdown-empty-icon { font-size: 30px; }
+.breakdown-empty p { font-family: var(--display); font-size: 17px; font-weight: 800; }
+
+.total-row { border-top: 2px dashed var(--ink); }
+.total-row span:first-child { font-family: var(--display); font-size: 16px; }
+
+.guarantee-note {
+  background: #fff9d6;
+  border-left: 4px solid var(--yellow);
+  color: #4b4a2f;
+}
+
+.submit-btn {
+  background: var(--ink);
+  border: 2px solid var(--ink);
+  font-size: 15px;
+}
+.submit-btn:hover { background: #142a5c; }
+
+@media (max-width: 860px) {
+  .content-grid { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .topbar { padding: 12px 18px; flex-wrap: wrap; gap: 10px; }
+  .topbar-nav { gap: 14px; flex-wrap: wrap; }
+  .main { padding: 18px; }
+  .page-banner { padding: 24px 22px; }
+}
+
+/* ===== Quotation logic helpers ===== */
+.field-group.full { grid-column: 1 / -1; }
+.field-select:disabled { background: #f0f1f4; color: #8a91a8; cursor: not-allowed; }
+.breakdown-row small { color: #8a91a8; }
+
+/* ===== Dropdown placeholder ("See details") ===== */
+.field-select:required:invalid { color: #8a91a8; }
+.field-select option { color: #1c2333; }
