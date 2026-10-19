@@ -2,8 +2,78 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Richers Admin — Printing Paper &amp; Ink Inventory</title>
 <link rel="stylesheet" href="styles.css">
+<style>
+.inventory-table-wrap {
+  overflow-x: auto;
+}
+
+.inventory-table {
+  min-width: 850px;
+}
+
+.stock-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stock-value {
+  min-width: 90px;
+  font-weight: 600;
+}
+
+.stock-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #cfd3dc;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1f2430;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.stock-btn:hover {
+  border-color: #2f6fed;
+  color: #2f6fed;
+}
+
+.stock-btn:disabled {
+  color: #8a90a0;
+  cursor: not-allowed;
+}
+
+.action-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+}
+
+.inventory-summary {
+  margin: -14px 0 18px;
+  color: #5b6270;
+  font-size: 13px;
+}
+
+.inventory-message {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #fbe3e1;
+  color: #a52b22;
+  font-size: 13px;
+}
+
+.inventory-message[hidden] {
+  display: none;
+}
+</style>
 </head>
 <body>
 
@@ -11,7 +81,7 @@
   <div class="sidebar">
     <div class="brand">RICHERS <span>ADMIN</span></div>
 
-    <a href="dashboard.html" class="nav-item"><span class="icon">📊</span> Dashboard</a>
+    <a href="admindashboard.html" class="nav-item"><span class="icon">📊</span> Dashboard</a>
     <a href="transaction-details.html" class="nav-item"><span class="icon">📦</span> Transactions</a>
     <a href="inventory.html" class="nav-item active"><span class="icon">🖨️</span> Inventory &amp; Supplies</a>
     <a href="customers.html" class="nav-item"><span class="icon">👥</span> Customer Records</a>
@@ -23,13 +93,16 @@
     <div class="page-header-row">
       <div>
         <h1 class="page-title">Printing Paper &amp; Ink Inventory</h1>
-        <p class="page-subtitle">Monitored stock levels and automatic material consumption tracking</p>
+        <p class="page-subtitle">Manage supply quantities, add inventory items, and monitor reorder levels</p>
       </div>
-      <button class="btn-dark">+ Add Supply Item</button>
+      <button class="btn-dark" id="addSupplyButton" type="button">+ Add Supply Item</button>
     </div>
 
-    <div class="pipeline-card">
-      <table>
+    <p class="inventory-summary" id="inventorySummary" aria-live="polite"></p>
+    <p class="inventory-message" id="inventoryMessage" role="alert" hidden></p>
+
+    <div class="pipeline-card inventory-table-wrap">
+      <table class="inventory-table">
         <thead>
           <tr>
             <th>Supply Item Code</th>
@@ -41,173 +114,227 @@
             <th>Action</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td class="item-code">PAP-A4-80</td>
-            <td>A4 Paper 80gsm (500 Sheets/Ream)</td>
-            <td>Paper Stock</td>
-            <td>142 Reams</td>
-            <td>20 Reams</td>
-            <td><span class="badge sufficient">SUFFICIENT</span></td>
-            <td><span class="action-link">Restock</span></td>
-          </tr>
-          <tr>
-            <td class="item-code">PAP-A4-70</td>
-            <td>A4 Paper 70gsm Standard</td>
-            <td>Paper Stock</td>
-            <td>12 Reams</td>
-            <td>25 Reams</td>
-            <td><span class="badge low-stock">LOW STOCK WARNING</span></td>
-            <td><span class="action-link stack">Reorder<br>Now</span></td>
-          </tr>
-          <tr>
-            <td class="item-code">INK-BLK-EP</td>
-            <td>Epson Black High-Cap Ink Cartridge</td>
-            <td>Ink &amp; Toner</td>
-            <td>3 Bottles</td>
-            <td>5 Bottles</td>
-            <td><span class="badge low-stock">LOW STOCK WARNING</span></td>
-            <td><span class="action-link stack">Reorder<br>Now</span></td>
-          </tr>
-          <tr>
-            <td class="item-code">BND-RNG-12</td>
-            <td>Spiral Ring Binding Coils (12mm)</td>
-            <td>Finishing Materials</td>
-            <td>350 Units</td>
-            <td>100 Units</td>
-            <td><span class="badge sufficient">SUFFICIENT</span></td>
-            <td><span class="action-link">Restock</span></td>
-          </tr>
-          <tr>
-            <td class="item-code">TAR-VIN-13</td>
-            <td>Heavy Duty Vinyl Tarpaulin Roll 13oz</td>
-            <td>Large Format Roll</td>
-            <td>18 Rolls</td>
-            <td>5 Rolls</td>
-            <td><span class="badge sufficient">SUFFICIENT</span></td>
-            <td><span class="action-link">Restock</span></td>
-          </tr>
-        </tbody>
+        <tbody id="inventoryRows"></tbody>
       </table>
     </div>
   </div>
 
 
-  
-</body>
-
-</html>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const rows = document.querySelectorAll('.pipeline-card tbody tr');
-  const STEP = 1;
-  const STORAGE_KEY = 'richers_stock_data';
+  const STORAGE_KEY = 'richers_inventory_v2';
+  const DEFAULT_ITEMS = [
+    { code: 'PAP-A4-80', description: 'A4 Paper 80gsm (500 Sheets/Ream)', category: 'Paper Stock', unit: 'Reams', stock: 50, threshold: 20 },
+    { code: 'PAP-A4-70', description: 'A4 Paper 70gsm Standard', category: 'Paper Stock', unit: 'Reams', stock: 50, threshold: 25 },
+    { code: 'INK-BLK-EP', description: 'Epson Black High-Cap Ink Cartridge', category: 'Ink & Toner', unit: 'Bottles', stock: 50, threshold: 5 },
+    { code: 'BND-RNG-12', description: 'Spiral Ring Binding Coils (12mm)', category: 'Finishing Materials', unit: 'Units', stock: 50, threshold: 100 },
+    { code: 'TAR-VIN-13', description: 'Heavy Duty Vinyl Tarpaulin Roll 13oz', category: 'Large Format Roll', unit: 'Rolls', stock: 50, threshold: 5 }
+  ];
+  const rowsElement = document.getElementById('inventoryRows');
+  const summaryElement = document.getElementById('inventorySummary');
+  const messageElement = document.getElementById('inventoryMessage');
+  let items;
 
-  function loadStockData() {
+  function showMessage(message) {
+    messageElement.textContent = message;
+    messageElement.hidden = false;
+  }
+
+  function clearMessage() {
+    messageElement.textContent = '';
+    messageElement.hidden = true;
+  }
+
+  function isValidItem(item) {
+    return item && typeof item.code === 'string' && typeof item.description === 'string' &&
+      typeof item.category === 'string' && typeof item.unit === 'string' &&
+      Number.isInteger(item.stock) && item.stock >= 0 &&
+      Number.isInteger(item.threshold) && item.threshold >= 0;
+  }
+
+  function readItems() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw === null) return DEFAULT_ITEMS.map((item) => ({ ...item }));
+
+    let saved;
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) {
-      console.error('Failed to read stock data:', e);
-      return {};
+      saved = JSON.parse(raw);
+    } catch (error) {
+      console.error('Inventory data could not be parsed.', error);
+      showMessage('Saved inventory data is invalid. No changes were made; clear the inventory data or contact support.');
+      return DEFAULT_ITEMS.map((item) => ({ ...item }));
     }
+
+    if (!Array.isArray(saved) || !saved.every(isValidItem)) {
+      showMessage('Saved inventory data has an unexpected format. No changes were made.');
+      return DEFAULT_ITEMS.map((item) => ({ ...item }));
+    }
+    return saved;
   }
 
-  function saveStockData(data) {
+  function saveItems() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch (e) {
-      console.error('Failed to save stock data:', e);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      clearMessage();
+      return true;
+    } catch (error) {
+      console.error('Inventory data could not be saved.', error);
+      showMessage('Inventory changes could not be saved in this browser. Check available storage and try again.');
+      return false;
     }
   }
 
-  const stockData = loadStockData();
-
-  function updateRowStatus(row) {
-    const stockCell = row.querySelector('.stock-value');
-    const thresholdCell = row.children[4];
-    const badgeCell = row.children[5];
-    const actionCell = row.children[6];
-
-    const stock = parseInt(stockCell.textContent, 10);
-    const threshold = parseInt(thresholdCell.textContent, 10);
-
-    const badge = badgeCell.querySelector('.badge');
-    const action = actionCell.querySelector('.action-link');
-
-    if (stock <= threshold) {
-      badge.className = 'badge low-stock';
-      badge.textContent = 'LOW STOCK WARNING';
-      action.className = 'action-link stack';
-      action.innerHTML = 'Reorder<br>Now';
-    } else {
-      badge.className = 'badge sufficient';
-      badge.textContent = 'SUFFICIENT';
-      action.className = 'action-link';
-      action.textContent = 'Restock';
-    }
+  function makeCell(text, className) {
+    const cell = document.createElement('td');
+    cell.textContent = text;
+    if (className) cell.className = className;
+    return cell;
   }
 
-  rows.forEach(row => {
-    const itemCode = row.querySelector('.item-code').textContent.trim();
-    const stockCell = row.children[3];
-    const text = stockCell.textContent.trim();
-    const match = text.match(/^(\d+)\s*(.*)$/);
-    if (!match) return;
-
-    let [, num, unit] = match;
-    num = parseInt(num, 10);
-
-    if (stockData[itemCode] !== undefined) {
-      num = stockData[itemCode];
-    } else {
-      stockData[itemCode] = num;
+  function setStock(item, newStock) {
+    if (!Number.isInteger(newStock) || newStock < 0) return;
+    const previousStock = item.stock;
+    item.stock = newStock;
+    if (!saveItems()) {
+      item.stock = previousStock;
+      render();
+      return;
     }
+    render();
+  }
 
-    stockCell.innerHTML = `
-      <span class="stock-controls">
-        <button class="stock-btn minus" type="button">−</button>
-        <span class="stock-value">${num} ${unit}</span>
-      </span>
-    `;
+  function render() {
+    rowsElement.replaceChildren();
+    let lowStockCount = 0;
 
-    const valueEl = stockCell.querySelector('.stock-value');
-    const minusBtn = stockCell.querySelector('.minus');
-    const actionCell = row.children[6];
-    const action = actionCell.querySelector('.action-link');
+    items.forEach((item) => {
+      const row = document.createElement('tr');
+      row.appendChild(makeCell(item.code, 'item-code'));
+      row.appendChild(makeCell(item.description));
+      row.appendChild(makeCell(item.category));
 
-    function setStock(newVal) {
-      newVal = Math.max(0, newVal);
-      valueEl.textContent = `${newVal} ${unit}`;
-      stockData[itemCode] = newVal;
-      saveStockData(stockData);
-      updateRowStatus(row);
-    }
+      const stockCell = document.createElement('td');
+      const controls = document.createElement('span');
+      controls.className = 'stock-controls';
+      const decrement = document.createElement('button');
+      decrement.className = 'stock-btn';
+      decrement.type = 'button';
+      decrement.textContent = '−';
+      decrement.setAttribute('aria-label', 'Use one ' + item.unit + ' of ' + item.description);
+      decrement.disabled = item.stock === 0;
+      const stockValue = document.createElement('span');
+      stockValue.className = 'stock-value';
+      stockValue.textContent = item.stock + ' ' + item.unit;
+      const increment = document.createElement('button');
+      increment.className = 'stock-btn';
+      increment.type = 'button';
+      increment.textContent = '+';
+      increment.setAttribute('aria-label', 'Add one ' + item.unit + ' of ' + item.description);
+      decrement.addEventListener('click', () => setStock(item, item.stock - 1));
+      increment.addEventListener('click', () => setStock(item, item.stock + 1));
+      controls.append(decrement, stockValue, increment);
+      stockCell.appendChild(controls);
+      row.appendChild(stockCell);
+      row.appendChild(makeCell(item.threshold + ' ' + item.unit));
 
-    minusBtn.addEventListener('click', () => {
-      const current = parseInt(valueEl.textContent, 10);
-      setStock(current - STEP);
+      const statusCell = document.createElement('td');
+      const badge = document.createElement('span');
+      const isLow = item.stock <= item.threshold;
+      if (isLow) lowStockCount++;
+      badge.className = 'badge ' + (isLow ? 'low-stock' : 'sufficient');
+      badge.textContent = isLow ? 'LOW STOCK WARNING' : 'SUFFICIENT';
+      statusCell.appendChild(badge);
+      row.appendChild(statusCell);
+
+      const actionCell = document.createElement('td');
+      const restock = document.createElement('button');
+      restock.className = 'action-link' + (isLow ? ' stack' : '');
+      restock.type = 'button';
+      restock.textContent = isLow ? 'Reorder Now' : 'Restock';
+      restock.addEventListener('click', () => {
+        const amount = prompt('Enter quantity to add to stock (current: ' + item.stock + ' ' + item.unit + '):', '50');
+        if (amount === null) return;
+        if (!/^\d+$/.test(amount.trim()) || Number(amount) < 1) {
+          alert('Enter a whole number greater than zero.');
+          return;
+        }
+        setStock(item, item.stock + Number(amount));
+      });
+      actionCell.appendChild(restock);
+      row.appendChild(actionCell);
+      rowsElement.appendChild(row);
     });
 
-    action.style.cursor = 'pointer';
-    action.addEventListener('click', () => {
-      const current = parseInt(valueEl.textContent, 10);
-      const added = prompt(`Enter quantity to add to stock (current: ${current} ${unit}):`, '50');
-      if (added === null) return; // cancelled
+    summaryElement.textContent = items.length + ' supply items · ' + lowStockCount + ' at or below reorder threshold';
+  }
 
-      const addedNum = parseInt(added, 10);
-      if (isNaN(addedNum) || addedNum < 0) {
-        alert('Please enter a valid positive number.');
-        return;
-      }
+  document.getElementById('addSupplyButton').addEventListener('click', () => {
+    const code = prompt('Enter a unique supply item code:');
+    if (code === null) return;
+    const normalizedCode = code.trim().toUpperCase();
+    if (!normalizedCode) {
+      alert('Supply item code is required.');
+      return;
+    }
+    if (items.some((item) => item.code.toUpperCase() === normalizedCode)) {
+      alert('That supply item code already exists.');
+      return;
+    }
 
-      setStock(current + addedNum);
-    });
+    const description = prompt('Enter item description:');
+    if (description === null) return;
+    if (!description.trim()) {
+      alert('Item description is required.');
+      return;
+    }
 
-    updateRowStatus(row);
+    const category = prompt('Enter item category:');
+    if (category === null) return;
+    if (!category.trim()) {
+      alert('Item category is required.');
+      return;
+    }
+
+    const unit = prompt('Enter stock unit (for example: Reams, Bottles, or Rolls):');
+    if (unit === null) return;
+    if (!unit.trim()) {
+      alert('Stock unit is required.');
+      return;
+    }
+
+    const thresholdInput = prompt('Enter minimum reorder threshold:', '10');
+    if (thresholdInput === null) return;
+    if (!/^\d+$/.test(thresholdInput.trim())) {
+      alert('Enter a non-negative whole number for the reorder threshold.');
+      return;
+    }
+
+    const newItem = {
+      code: normalizedCode,
+      description: description.trim(),
+      category: category.trim(),
+      unit: unit.trim(),
+      stock: 50,
+      threshold: Number(thresholdInput)
+    };
+    items.push(newItem);
+    if (!saveItems()) {
+      items.pop();
+      return;
+    }
+    render();
   });
 
-  saveStockData(stockData);
+  items = readItems();
+  if (localStorage.getItem(STORAGE_KEY) === null) saveItems();
+  render();
+
+  window.addEventListener('storage', (event) => {
+    if (event.key !== STORAGE_KEY) return;
+    items = readItems();
+    render();
+  });
 });
 </script>
+</body>
+</html>

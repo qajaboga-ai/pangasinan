@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Richers Admin — Daily Operations Dashboard</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.order-status-select {
+  max-width: 150px;
+  padding: 7px 8px;
+  border: 1px solid #cfd3dc;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1f2430;
+  font: inherit;
+  font-size: 12px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 900px) {
+  .pipeline-card {
+    overflow-x: auto;
+  }
+
+  .pipeline-card table {
+    min-width: 850px;
+  }
+}
+</style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="brand">RICHERS <span>ADMIN</span></div>
+
+    <a href="admindashboard.html" class="nav-item active"><span class="icon">📊</span> Dashboard</a>
+    <a href="transaction-details.html" class="nav-item"><span class="icon">📦</span> Transactions</a>
+    <a href="inventory.html" class="nav-item"><span class="icon">🖨️</span> Inventory &amp; Supplies</a>
+    <a href="customers.html" class="nav-item"><span class="icon">👥</span> Customer Records</a>
+    <a href="reports.html" class="nav-item"><span class="icon">📈</span> Reports</a>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+    <h1 class="page-title">Daily Operations Dashboard</h1>
+    <p class="page-subtitle" id="dashboardDate">Daily order overview — Pasig Main Branch</p>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-label">Today's Revenue</div>
+        <div class="stat-value blue" id="todayRevenue">₱0.00</div>
+        <div class="stat-foot muted" id="todayRevenueNote">Collected payments today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active Orders</div>
+        <div class="stat-value" id="activeOrdersCount">0 Jobs</div>
+        <div class="stat-foot amber" id="activeOrdersSummary">0 pending • 0 in production</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Completed Orders</div>
+        <div class="stat-value" id="completedOrdersCount">0 Jobs</div>
+        <div class="stat-foot green">Completed orders</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Low Stock Alerts</div>
+        <div class="stat-value red">2 Items</div>
+        <div class="stat-foot red">A4 70gsm Paper, Black Ink</div>
+      </div>
+    </div>
+
+    <div class="pipeline-card">
+      <div class="pipeline-header">Real-Time Order Pipeline</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer Name</th>
+            <th>Job Specification</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="orderPipeline">
+          <tr><td colspan="6">Loading customer orders…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+  const ORDER_STORAGE_KEY = 'richersOrders';
+  const ORDER_STATUSES = [
+    'Received',
+    'File Verified',
+    'Printing',
+    'Quality check',
+    'Ready for Pickup',
+    'Completed'
+  ];
+
+  document.getElementById('dashboardDate').textContent =
+    new Date().toLocaleDateString(undefined, { dateStyle: 'full' }) + ' — Pasig Main Branch';
+
+  renderDashboardOrders();
+  window.addEventListener('storage', function (event) {
+    if (event.key === ORDER_STORAGE_KEY) renderDashboardOrders();
+  });
+
+  document.getElementById('orderPipeline').addEventListener('change', function (event) {
+    const statusSelect = event.target.closest('[data-order-status]');
+    if (!statusSelect) return;
+
+    const orders = readOrders();
+    const order = orders.find(function (item) {
+      return item.id === statusSelect.dataset.orderStatus;
+    });
+    if (!order) return;
+
+    order.status = statusSelect.value;
+    localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(orders));
+    renderDashboardOrders();
+  });
+
+  function readOrders() {
+    const rawOrders = JSON.parse(localStorage.getItem(ORDER_STORAGE_KEY) || '[]');
+    const accounts = JSON.parse(localStorage.getItem('richersAccounts') || '[]');
+
+    return rawOrders.map(function (order) {
+      const account = accounts.find(function (item) {
+        return order.ownerEmail && item.email.toLowerCase() === order.ownerEmail.toLowerCase();
+      });
+      return {
+        ...order,
+        customerName: order.customerName || (account && account.fullName) || order.ownerEmail || 'Unknown customer',
+        customerContact: order.customerContact || (account && account.contact) || ''
+      };
+    });
+  }
+
+  function renderDashboardOrders() {
+    const orders = readOrders();
+    const completed = orders.filter(function (order) {
+      return order.status === 'Completed';
+    });
+    const today = new Date().toDateString();
+    const paidToday = orders.filter(function (order) {
+      return order.paid && order.paidAt && new Date(order.paidAt).toDateString() === today;
+    });
+    const active = orders.filter(function (order) {
+      return order.status !== 'Completed';
+    });
+    const pendingCount = active.filter(function (order) {
+      return order.status === 'Received' || order.status === 'File Verified';
+    }).length;
+
+    document.getElementById('activeOrdersCount').textContent = active.length + ' Jobs';
+    document.getElementById('activeOrdersSummary').textContent =
+      pendingCount + ' pending • ' + (active.length - pendingCount) + ' in production';
+    document.getElementById('completedOrdersCount').textContent = completed.length + ' Jobs';
+    document.getElementById('todayRevenue').textContent = formatCurrency(
+      paidToday.reduce(function (sum, order) {
+        return sum + getOrderTotal(order);
+      }, 0)
+    );
+    document.getElementById('todayRevenueNote').textContent =
+      paidToday.length + (paidToday.length === 1 ? ' payment recorded today' : ' payments recorded today');
+
+    const pipeline = document.getElementById('orderPipeline');
+    if (orders.length === 0) {
+      pipeline.innerHTML = '<tr><td colspan="6">No customer orders have been submitted yet.</td></tr>';
+      return;
+    }
+
+    pipeline.innerHTML = orders.map(function (order) {
+      const specification = [
+        order.service,
+        order.paper,
+        order.color,
+        order.binding,
+        order.copies + ' copies'
+      ].filter(Boolean).join(' · ');
+      const status = ORDER_STATUSES.includes(order.status) ? order.status : 'Received';
+      const options = ORDER_STATUSES.map(function (label) {
+        return '<option value="' + escapeHtml(label) + '"' +
+          (label === status ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
+      }).join('');
+
+      return '<tr>' +
+        '<td class="order-id">#' + escapeHtml(order.id) + '</td>' +
+        '<td><strong class="cust-name">' + escapeHtml(order.customerName) + '</strong>' +
+          (order.customerContact ? '<br><small>' + escapeHtml(order.customerContact) + '</small>' : '') +
+          '<br><small>' + escapeHtml(order.ownerEmail) + '</small></td>' +
+        '<td>' + escapeHtml(specification || 'No job details') +
+          '<br><small>File: ' + escapeHtml(order.fileName || 'Not provided') +
+          ' · Pickup: ' + escapeHtml(order.pickup || 'Not specified') + '</small></td>' +
+        '<td class="amount">' + (getOrderTotal(order) > 0
+          ? formatCurrency(getOrderTotal(order))
+          : 'Awaiting quote') + '</td>' +
+        '<td><span class="badge ' + statusClass(status) + '">' + escapeHtml(status) + '</span></td>' +
+        '<td><a class="action-link" href="transaction-details.html?id=' +
+          encodeURIComponent(order.id) + '">Details</a><br>' +
+          '<label class="sr-only" for="status-' + escapeHtml(order.id) +
+          '">Update status for ' + escapeHtml(order.id) + '</label>' +
+          '<select id="status-' + escapeHtml(order.id) + '" class="order-status-select" data-order-status="' +
+          escapeHtml(order.id) + '">' + options + '</select></td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  function statusClass(status) {
+    if (status === 'Completed') return 'completed';
+    if (status === 'Ready for Pickup') return 'pickup';
+    return 'printing';
+  }
+
+  function formatCurrency(amount) {
+    return new Intl.NumberFormat('en-PH', {
+      style: 'currency',
+      currency: 'PHP',
+      minimumFractionDigits: 2
+    }).format(amount);
+  }
+
+  function getOrderTotal(order) {
+    if (typeof order.total === 'number') return order.total;
+    if (Array.isArray(order.lineItems)) {
+      return order.lineItems.reduce(function (sum, item) {
+        return sum + (typeof item.total === 'number' ? item.total : 0);
+      }, 0);
+    }
+    return 0;
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, function (character) {
+      return {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[character];
+    });
+  }
+  </script>
+</body>
+</html>

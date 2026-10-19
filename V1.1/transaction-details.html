@@ -4,6 +4,353 @@
 <meta charset="UTF-8">
 <title>Richers Admin — Transaction Details</title>
 <link rel="stylesheet" href="styles.css">
+<style>
+:root {
+  --sidebar-bg: #12182b;
+  --sidebar-active: #1d2540;
+  --sidebar-text: #8a91a8;
+  --sidebar-text-active: #ffffff;
+  --accent-blue: #2f6fed;
+  --page-bg: #f4f5f7;
+  --card-bg: #ffffff;
+  --border-color: #e6e8ee;
+  --table-header-bg: #eef0f4;
+  --text-dark: #1c2333;
+  --text-muted: #8a91a8;
+  --green-bg: #d9f2e3;
+  --green-text: #1c8a52;
+  --yellow-bg: #fbf0d1;
+  --yellow-text: #9a7a12;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--page-bg);
+  min-height: 100vh;
+}
+
+.app-frame {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  background: var(--page-bg);
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  background: var(--sidebar-bg);
+  padding: 22px 16px;
+  flex-shrink: 0;
+  min-height: 100vh;
+}
+
+.brand {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+  margin: 4px 4px 28px;
+}
+
+.brand span {
+  color: var(--accent-blue);
+}
+
+.nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: 8px;
+  color: var(--sidebar-text);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.nav-item .icon {
+  font-size: 15px;
+  width: 18px;
+  text-align: center;
+}
+
+.nav-item.active {
+  background: var(--sidebar-active);
+  color: var(--sidebar-text-active);
+}
+
+.nav-item:not(.active):hover {
+  color: #c3c8d9;
+}
+
+/* Main content */
+.main {
+  flex: 1;
+  padding: 28px 32px;
+  min-width: 0;
+}
+
+.page-title {
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0 0 20px;
+}
+
+.page-title .order-id {
+  color: var(--accent-blue);
+}
+
+/* Workflow tracker card */
+.tracker-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 18px 22px;
+  margin-bottom: 20px;
+}
+
+.tracker-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: #6b7280;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.tracker-steps {
+  display: flex;
+  justify-content: space-between;
+}
+
+.tracker-step {
+  flex: 1;
+  text-align: left;
+}
+
+.step-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.step-title.done {
+  color: var(--green-text);
+}
+
+.step-title.current {
+  color: var(--accent-blue);
+}
+
+.step-title.pending {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.step-time {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.step-time.current {
+  color: var(--accent-blue);
+}
+
+/* Two-column layout */
+.content-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.card-title {
+  padding: 18px 20px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+  border-bottom: 1px solid var(--border-color);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  background: var(--table-header-bg);
+  text-align: left;
+  padding: 14px 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: #6b7280;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-color);
+}
+
+tbody td {
+  padding: 16px 20px;
+  font-size: 13.5px;
+  color: var(--text-dark);
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Customer & payment info panel */
+.info-panel {
+  padding: 20px;
+}
+
+.info-row {
+  font-size: 13.5px;
+  color: var(--text-dark);
+  margin-bottom: 14px;
+}
+
+.info-row b {
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.status-verified {
+  background: var(--green-bg);
+  color: var(--green-text);
+}
+
+.status-unpaid {
+  background: var(--yellow-bg);
+  color: var(--yellow-text);
+}
+
+.pay-btn {
+  width: 100%;
+  background: var(--accent-blue);
+  color: #ffffff;
+  border: none;
+  padding: 14px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.15s ease, transform 0.08s ease, box-shadow 0.15s ease;
+  box-shadow: 0 2px 6px rgba(47, 111, 237, 0.35);
+}
+
+.pay-btn:hover {
+  background: #2660d6;
+  box-shadow: 0 4px 10px rgba(47, 111, 237, 0.4);
+}
+
+.pay-btn:active {
+  transform: scale(0.97);
+  background: #1f52b8;
+  box-shadow: 0 1px 3px rgba(47, 111, 237, 0.4);
+}
+
+.pay-btn:focus-visible {
+  outline: 2px solid #1c2333;
+  outline-offset: 2px;
+}
+
+.pay-btn.paid {
+  background: var(--green-text);
+  cursor: default;
+  box-shadow: none;
+}
+
+.pay-btn.paid:hover,
+.pay-btn.paid:active {
+  transform: none;
+  background: var(--green-text);
+}
+
+.transaction-selectors {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 18px 22px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--card-bg);
+}
+
+.transaction-selectors label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--text-dark);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.transaction-selectors select {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #cfd3dc;
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--text-dark);
+  font: inherit;
+  font-size: 13px;
+}
+
+.transaction-selectors select:disabled {
+  background: #f4f5f7;
+  color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+  .transaction-selectors {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
 </head>
 <body>
 
@@ -11,7 +358,7 @@
   <div class="sidebar">
     <div class="brand">RICHERS <span>ADMIN</span></div>
 
-    <a href="dashboard.html" class="nav-item"><span class="icon">📊</span> Dashboard</a>
+    <a href="admindashboard.html" class="nav-item"><span class="icon">📊</span> Dashboard</a>
     <a href="transaction-details.html" class="nav-item active"><span class="icon">📦</span> Transactions</a>
     <a href="inventory.html" class="nav-item"><span class="icon">🖨️</span> Inventory &amp; Supplies</a>
     <a href="customers.html" class="nav-item"><span class="icon">👥</span> Customer Records</a>
@@ -20,7 +367,20 @@
 
   <!-- Main content -->
   <div class="main">
-    <h1 class="page-title">Transaction Details: <span class="id-accent">#RPS-0891</span></h1>
+    <h1 class="page-title">Transaction Details: <span class="id-accent" id="transactionOrderId">Select an order</span></h1>
+
+    <div class="transaction-selectors">
+      <label for="customerAccountSelect">Customer account
+        <select id="customerAccountSelect">
+          <option value="">Loading customer accounts…</option>
+        </select>
+      </label>
+      <label for="customerOrderSelect">Customer order
+        <select id="customerOrderSelect" disabled>
+          <option value="">Select a customer account first</option>
+        </select>
+      </label>
+    </div>
 
     <!-- Workflow tracker -->
     <div class="panel" style="margin-bottom: 20px;">
@@ -28,28 +388,7 @@
         <span>Live Production Workflow Tracker</span>
         <button id="advance-step-btn" class="btn-link-small">Advance to Next Step →</button>
       </div>
-      <div class="tracker" id="tracker">
-        <div class="tracker-step done" data-step="0">
-          <div class="step-label"><span class="step-icon">✓</span> Order Received</div>
-          <div class="step-sub">10:15 AM</div>
-        </div>
-        <div class="tracker-step done" data-step="1">
-          <div class="step-label"><span class="step-icon">✓</span> File Verified</div>
-          <div class="step-sub">10:22 AM</div>
-        </div>
-        <div class="tracker-step current" data-step="2">
-          <div class="step-label"><span class="step-icon">●</span> Printing In Progress</div>
-          <div class="step-sub">Current Step</div>
-        </div>
-        <div class="tracker-step pending" data-step="3">
-          <div class="step-label"><span class="step-icon">○</span> Quality Check</div>
-          <div class="step-sub">Pending</div>
-        </div>
-        <div class="tracker-step pending" data-step="4">
-          <div class="step-label"><span class="step-icon">○</span> Ready for Pickup</div>
-          <div class="step-sub">Pending</div>
-        </div>
-      </div>
+      <div class="tracker" id="tracker"></div>
     </div>
 
     <!-- Two column: print job items + customer/payment info -->
@@ -67,26 +406,7 @@
               <th>Total</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td class="cust-name">A4 Full Color Print (80gsm)</td>
-              <td>450 pgs</td>
-              <td>₱5.00</td>
-              <td class="amount">₱2,250.00</td>
-            </tr>
-            <tr>
-              <td class="cust-name">Ring Binding Heavy Duty</td>
-              <td>10 sets</td>
-              <td>₱45.00</td>
-              <td class="amount">₱450.00</td>
-            </tr>
-            <tr>
-              <td class="cust-name">PVC Transparent Covers</td>
-              <td>10 sets</td>
-              <td>₱15.00</td>
-              <td class="amount">₱150.00</td>
-            </tr>
-          </tbody>
+          <tbody id="transactionItems"></tbody>
         </table>
       </div>
 
@@ -94,21 +414,343 @@
       <div class="panel">
         <div class="panel-title">Customer &amp; Payment Info</div>
         <div class="info-list">
-          <div class="info-row"><span class="info-label">Customer Name:</span> <span class="info-value">Andrei Joaquin A.</span></div>
-          <div class="info-row"><span class="info-label">Contact:</span> <span class="info-value">+63 917 555 0192</span></div>
-          <div class="info-row"><span class="info-label">Account Status:</span> <span class="badge verified">VERIFIED USER</span></div>
+          <div class="info-row"><span class="info-label">Customer Name:</span> <span class="info-value" id="transactionCustomerName">—</span></div>
+          <div class="info-row"><span class="info-label">Contact:</span> <span class="info-value" id="transactionCustomerContact">—</span></div>
+          <div class="info-row"><span class="info-label">Email:</span> <span class="info-value" id="transactionCustomerEmail">—</span></div>
+          <div class="info-row"><span class="info-label">Account Status:</span> <span id="transactionAccountStatus" class="badge verified">REGISTERED USER</span></div>
           <div class="info-row"><span class="info-label">Payment Method:</span> <span class="info-value">Cash on Pickup / Over-the-counter</span></div>
-          <div class="info-row"><span class="info-label">Payment Status:</span> <span id="payment-status-badge" class="badge unpaid">UNPAID (PENDING PICKUP)</span></div>
+          <div class="info-row"><span class="info-label">Payment Status:</span> <span id="payment-status-badge" class="badge unpaid">UNPAID</span></div>
         </div>
 
         <hr class="divider">
 
-        <button id="record-payment-btn" class="btn-primary" data-amount="₱2,850.00">Record Cash Payment (₱2,850.00)</button>
+        <button id="record-payment-btn" class="btn-primary" disabled>Record Cash Payment</button>
       </div>
 
     </div>
   </div>
 
-  <script src="transaction.js"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const ORDER_STORAGE_KEY = "richersOrders";
+    const STEPS = [
+      { status: "Received", label: "Order Received" },
+      { status: "File Verified", label: "File Verified" },
+      { status: "Printing", label: "Printing In Progress" },
+      { status: "Quality check", label: "Quality Check" },
+      { status: "Ready for Pickup", label: "Ready for Pickup" },
+      { status: "Completed", label: "Completed" }
+    ];
+    const recordPaymentBtn = document.getElementById("record-payment-btn");
+    const paymentBadge = document.getElementById("payment-status-badge");
+    const advanceBtn = document.getElementById("advance-step-btn");
+    const tracker = document.getElementById("tracker");
+    const orderIdElement = document.getElementById("transactionOrderId");
+    const accountSelect = document.getElementById("customerAccountSelect");
+    const orderSelect = document.getElementById("customerOrderSelect");
+    let requestedOrderId = new URLSearchParams(window.location.search).get("id");
+    let accounts = [];
+    let accountChoices = [];
+    let orders = [];
+    let selectedAccount = null;
+    let currentOrder = null;
+
+    loadOrder();
+    window.addEventListener("storage", (event) => {
+      if (event.key === ORDER_STORAGE_KEY || event.key === "richersAccounts") loadOrder();
+    });
+    accountSelect.addEventListener("change", () => {
+      requestedOrderId = null;
+      selectedAccount = accountChoices.find((account) => account.email === accountSelect.value) || null;
+      populateOrders();
+      currentOrder = ordersForSelectedAccount()[0] || null;
+      updateOrderUrl();
+      renderOrder();
+    });
+    orderSelect.addEventListener("change", () => {
+      currentOrder = orders.find((order) => order.id === orderSelect.value) || null;
+      requestedOrderId = currentOrder ? currentOrder.id : null;
+      updateOrderUrl();
+      renderOrder();
+    });
+
+    recordPaymentBtn.addEventListener("click", () => {
+      if (!currentOrder || currentOrder.paid) return;
+      currentOrder.paid = true;
+      currentOrder.paidAt = new Date().toISOString();
+      saveOrder();
+    });
+
+    advanceBtn.addEventListener("click", () => {
+      if (!currentOrder) return;
+      const currentIndex = Math.max(0, STEPS.findIndex((step) => step.status === currentOrder.status));
+      if (currentIndex >= STEPS.length - 1) return;
+      currentOrder.status = STEPS[currentIndex + 1].status;
+      saveOrder();
+    });
+
+    function loadOrder() {
+      orders = JSON.parse(localStorage.getItem(ORDER_STORAGE_KEY) || "[]");
+      accounts = JSON.parse(localStorage.getItem("richersAccounts") || "[]");
+      const linkedOrder = requestedOrderId
+        ? orders.find((order) => order.id === requestedOrderId)
+        : null;
+      selectedAccount = accounts.find((account) =>
+        account.email && linkedOrder && account.email.toLowerCase() ===
+        (linkedOrder.ownerEmail || "").toLowerCase()
+      ) || (selectedAccount && accounts.find((account) =>
+        account.email === selectedAccount.email
+      )) || (linkedOrder && {
+        email: linkedOrder.ownerEmail,
+        fullName: linkedOrder.customerName || linkedOrder.ownerEmail,
+        contact: linkedOrder.customerContact || ""
+      }) || accounts[0] || null;
+
+      populateAccounts();
+      populateOrders();
+      currentOrder = linkedOrder && belongsToSelectedAccount(linkedOrder)
+        ? linkedOrder
+        : (ordersForSelectedAccount()[0] || null);
+      requestedOrderId = currentOrder ? currentOrder.id : null;
+      updateOrderUrl();
+      renderOrder();
+    }
+
+    function saveOrder() {
+      const savedOrders = JSON.parse(localStorage.getItem(ORDER_STORAGE_KEY) || "[]");
+      const index = savedOrders.findIndex((order) => order.id === currentOrder.id);
+      if (index === -1) return;
+      savedOrders[index] = currentOrder;
+      localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(savedOrders));
+      orders = savedOrders;
+      renderOrder();
+    }
+
+    function populateAccounts() {
+      const accountByEmail = new Map();
+      accounts.forEach((account) => {
+        if (account.email) accountByEmail.set(account.email.toLowerCase(), account);
+      });
+      orders.forEach((order) => {
+        const email = (order.ownerEmail || "").toLowerCase();
+        if (email && !accountByEmail.has(email)) {
+          accountByEmail.set(email, {
+            email: order.ownerEmail,
+            fullName: order.customerName || order.ownerEmail,
+            contact: order.customerContact || ""
+          });
+        }
+      });
+
+      accountChoices = Array.from(accountByEmail.values()).sort((a, b) =>
+        (a.fullName || a.email).localeCompare(b.fullName || b.email)
+      );
+      accountSelect.replaceChildren();
+      if (accountChoices.length === 0) {
+        accountSelect.add(new Option("No customer accounts found", ""));
+        accountSelect.disabled = true;
+        return;
+      }
+
+      accountSelect.disabled = false;
+      accountChoices.forEach((account) => {
+        const option = new Option(
+          (account.fullName || "Name unavailable") + " — " + account.email,
+          account.email
+        );
+        accountSelect.add(option);
+      });
+      if (selectedAccount) accountSelect.value = selectedAccount.email;
+    }
+
+    function populateOrders() {
+      const customerOrders = ordersForSelectedAccount();
+      orderSelect.replaceChildren();
+
+      if (!selectedAccount) {
+        orderSelect.add(new Option("Select a customer account first", ""));
+        orderSelect.disabled = true;
+        return;
+      }
+      if (customerOrders.length === 0) {
+        orderSelect.add(new Option("No orders for this account", ""));
+        orderSelect.disabled = true;
+        return;
+      }
+
+      orderSelect.disabled = false;
+      customerOrders.forEach((order) => {
+        const date = order.createdAt ? new Date(order.createdAt) : null;
+        const dateLabel = date && !Number.isNaN(date.getTime())
+          ? " — " + date.toLocaleDateString()
+          : "";
+        orderSelect.add(new Option(
+          "#" + order.id + " — " + (order.service || "Print order") + dateLabel,
+          order.id
+        ));
+      });
+    }
+
+    function ordersForSelectedAccount() {
+      if (!selectedAccount || !selectedAccount.email) return [];
+      return orders.filter((order) => order.ownerEmail &&
+        order.ownerEmail.toLowerCase() === selectedAccount.email.toLowerCase());
+    }
+
+    function belongsToSelectedAccount(order) {
+      return Boolean(selectedAccount && order.ownerEmail &&
+        selectedAccount.email.toLowerCase() === order.ownerEmail.toLowerCase());
+    }
+
+    function updateOrderUrl() {
+      const url = new URL(window.location.href);
+      if (currentOrder) url.searchParams.set("id", currentOrder.id);
+      else url.searchParams.delete("id");
+      window.history.replaceState(null, "", url);
+    }
+
+    function renderOrder() {
+      const accountStatus = document.getElementById("transactionAccountStatus");
+      setText("transactionCustomerName", selectedAccount && selectedAccount.fullName || "—");
+      setText("transactionCustomerContact", selectedAccount && selectedAccount.contact || "—");
+      setText("transactionCustomerEmail", selectedAccount && selectedAccount.email || "—");
+      accountStatus.textContent = selectedAccount && selectedAccount.isVerified
+        ? "VERIFIED USER"
+        : selectedAccount ? "REGISTERED USER" : "NO ACCOUNT SELECTED";
+
+      if (!currentOrder) {
+        orderIdElement.textContent = selectedAccount ? "No order selected" : "No customer accounts";
+        tracker.replaceChildren();
+        document.getElementById("transactionItems").innerHTML = selectedAccount
+          ? '<tr><td colspan="4">This customer account has no orders.</td></tr>'
+          : '<tr><td colspan="4">No customer accounts or orders were found.</td></tr>';
+        advanceBtn.disabled = true;
+        recordPaymentBtn.disabled = true;
+        paymentBadge.textContent = "UNPAID";
+        paymentBadge.classList.remove("paid");
+        paymentBadge.classList.add("unpaid");
+        return;
+      }
+
+      orderIdElement.textContent = "#" + currentOrder.id;
+      orderSelect.value = currentOrder.id;
+      const account = accounts.find((item) => item.email && currentOrder.ownerEmail &&
+        item.email.toLowerCase() === currentOrder.ownerEmail.toLowerCase());
+      setText("transactionCustomerName", currentOrder.customerName || (account && account.fullName) || "—");
+      setText("transactionCustomerContact", currentOrder.customerContact || (account && account.contact) || "—");
+      setText("transactionCustomerEmail", currentOrder.ownerEmail || "—");
+      accountStatus.textContent = account && account.isVerified ? "VERIFIED USER" : "REGISTERED USER";
+
+      renderItems();
+      renderTracker();
+      paymentBadge.textContent = currentOrder.paid ? "PAID" : "UNPAID";
+      paymentBadge.classList.toggle("paid", Boolean(currentOrder.paid));
+      paymentBadge.classList.toggle("unpaid", !currentOrder.paid);
+      recordPaymentBtn.disabled = Boolean(currentOrder.paid);
+      recordPaymentBtn.textContent = currentOrder.paid ? "Payment Recorded" : "Record Cash Payment";
+
+      const statusIndex = STEPS.findIndex((step) => step.status === currentOrder.status);
+      const isComplete = statusIndex >= STEPS.length - 1;
+      advanceBtn.disabled = isComplete;
+      advanceBtn.textContent = isComplete ? "Workflow Complete" : "Advance to Next Step →";
+    }
+
+    function renderItems() {
+      const details = [
+        ...(Array.isArray(currentOrder.lineItems) ? currentOrder.lineItems : []),
+        ...(!Array.isArray(currentOrder.lineItems) ? [
+          { description: currentOrder.service || "Service", quantity: currentOrder.copies || "—" },
+          { description: "Paper: " + (currentOrder.paper || "—"), quantity: "—" },
+          { description: "Color: " + (currentOrder.color || "—"), quantity: "—" },
+          { description: "Binding / Finishing: " + (currentOrder.binding || "—"), quantity: "—" },
+          { description: "Uploaded file: " + (currentOrder.fileName || "—"), quantity: "—" }
+        ] : [])
+      ].filter((item) => item.description);
+      const body = document.getElementById("transactionItems");
+      body.replaceChildren();
+
+      if (details.length === 0) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 4;
+        cell.textContent = "No print job details were saved for this order.";
+        row.appendChild(cell);
+        body.appendChild(row);
+        return;
+      }
+
+      details.forEach((item) => {
+        const row = document.createElement("tr");
+        const description = document.createElement("td");
+        description.className = "cust-name";
+        description.textContent = item.description;
+        row.appendChild(description);
+        const quantity = document.createElement("td");
+        quantity.textContent = item.quantity +
+          (typeof item.quantity === "number" ? " " + (item.unit || "units") : "");
+        row.appendChild(quantity);
+        const price = document.createElement("td");
+        price.textContent = typeof item.unitPrice === "number" ? formatCurrency(item.unitPrice) : "Awaiting quote";
+        row.appendChild(price);
+        const total = document.createElement("td");
+        total.className = "amount";
+        total.textContent = typeof item.total === "number" ? formatCurrency(item.total) : "Awaiting quote";
+        row.appendChild(total);
+        body.appendChild(row);
+      });
+
+      const totalRow = document.createElement("tr");
+      const totalLabel = document.createElement("td");
+      totalLabel.colSpan = 3;
+      totalLabel.textContent = "Estimated total";
+      totalLabel.className = "cust-name";
+      totalRow.appendChild(totalLabel);
+      const totalAmount = document.createElement("td");
+      totalAmount.className = "amount";
+      totalAmount.textContent = typeof currentOrder.total === "number"
+        ? formatCurrency(currentOrder.total)
+        : "Awaiting quote";
+      totalRow.appendChild(totalAmount);
+      body.appendChild(totalRow);
+    }
+
+    function renderTracker() {
+      let statusIndex = STEPS.findIndex((step) => step.status === currentOrder.status);
+      if (statusIndex < 0) statusIndex = 0;
+      tracker.replaceChildren();
+
+      STEPS.forEach((step, index) => {
+        const node = document.createElement("div");
+        const state = index < statusIndex ? "done" : index === statusIndex ? "current" : "pending";
+        node.className = "tracker-step " + state;
+        node.dataset.step = String(index);
+
+        const label = document.createElement("div");
+        label.className = "step-label";
+        const icon = document.createElement("span");
+        icon.className = "step-icon";
+        icon.textContent = state === "done" ? "✓" : state === "current" ? "●" : "○";
+        label.append(icon, document.createTextNode(" " + step.label));
+        const sub = document.createElement("div");
+        sub.className = "step-sub";
+        sub.textContent = state === "current" ? "Current Step" : state === "pending" ? "Pending" : "Complete";
+        node.append(label, sub);
+        tracker.appendChild(node);
+      });
+    }
+
+    function setText(id, value) {
+      document.getElementById(id).textContent = value;
+    }
+
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat("en-PH", {
+        style: "currency",
+        currency: "PHP",
+        minimumFractionDigits: 2
+      }).format(amount);
+    }
+  });
+  </script>
 </body>
 </html>

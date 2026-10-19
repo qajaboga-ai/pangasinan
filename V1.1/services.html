@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Services &amp; Printing — Richers Printing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="footer.css">
+  <style>
+    :root {
+      --ink: #0d1b3e;
+      --blue: #2f6fed;
+      --cyan: #00a8e8;
+      --magenta: #e6007e;
+      --yellow: #ffd400;
+      --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 100% 0, rgba(0, 168, 232, 0.10) 0 180px, transparent 181px),
+        #f6f7fb;
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 14px 32px;
+      border-bottom: 1px solid #e3e7f0;
+      background: rgba(246, 247, 251, 0.95);
+      backdrop-filter: blur(8px);
+    }
+
+    .topbar-brand {
+      color: var(--ink);
+      font-family: var(--display);
+      font-size: 18px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .topbar-brand span {
+      color: var(--blue);
+    }
+
+    .topbar-nav {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+    }
+
+    .topbar-nav a {
+      color: #4b5563;
+      font-size: 13px;
+      text-decoration: none;
+    }
+
+    .topbar-nav a:hover {
+      color: var(--blue);
+    }
+
+    .page {
+      width: min(1120px, calc(100% - 40px));
+      margin: 34px auto 64px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(28px, 6vw, 58px);
+      border-radius: 20px;
+      background: var(--ink);
+      color: #ffffff;
+    }
+
+    .hero::after {
+      position: absolute;
+      right: 20px;
+      bottom: -70px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background-image: radial-gradient(var(--cyan) 28%, transparent 30%);
+      background-size: 15px 15px;
+      content: "";
+      opacity: 0.8;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--yellow);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: var(--display);
+    }
+
+    h1 {
+      position: relative;
+      z-index: 1;
+      max-width: 700px;
+      margin: 0 0 12px;
+      font-size: clamp(32px, 6vw, 54px);
+      line-height: 1.05;
+    }
+
+    .hero-copy {
+      position: relative;
+      z-index: 1;
+      max-width: 630px;
+      margin: 0;
+      color: #c6cee1;
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    .hero-actions {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 12px 18px;
+      border: 2px solid var(--yellow);
+      border-radius: 8px;
+      background: var(--yellow);
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .button-secondary {
+      border-color: #9aabc9;
+      background: transparent;
+      color: #ffffff;
+    }
+
+    .section-heading {
+      margin: 42px 0 18px;
+    }
+
+    .section-heading h2 {
+      margin: 0 0 6px;
+      font-size: clamp(24px, 4vw, 32px);
+    }
+
+    .section-heading p {
+      margin: 0;
+      color: #68718c;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .service-card {
+      padding: 22px;
+      border: 2px solid var(--ink);
+      border-radius: 14px;
+      background: #ffffff;
+      box-shadow: 5px 5px 0 var(--cyan);
+    }
+
+    .service-card:nth-child(2) {
+      box-shadow: 5px 5px 0 var(--magenta);
+    }
+
+    .service-card:nth-child(3) {
+      box-shadow: 5px 5px 0 var(--yellow);
+    }
+
+    .service-card:nth-child(4) {
+      box-shadow: 5px 5px 0 #a4b2d1;
+    }
+
+    .service-card h3 {
+      margin: 0 0 8px;
+      font-size: 21px;
+    }
+
+    .service-card p {
+      margin: 0;
+      color: #59627a;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .price-list {
+      display: grid;
+      gap: 8px;
+      margin: 18px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .price-list li {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding-top: 8px;
+      border-top: 1px solid #e7eaf1;
+      color: #3d465e;
+      font-size: 13px;
+    }
+
+    .price-list strong {
+      color: var(--ink);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .info-card {
+      padding: 18px;
+      border-radius: 12px;
+      background: #e9effb;
+    }
+
+    .info-card h3 {
+      margin: 0 0 6px;
+      font-size: 16px;
+    }
+
+    .info-card p {
+      margin: 0;
+      color: #59627a;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .estimate-note {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-left: 4px solid var(--yellow);
+      border-radius: 6px;
+      background: #fff9d6;
+      color: #4b4a2f;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .bottom-cta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-top: 38px;
+      padding: 24px;
+      border-radius: 14px;
+      background: var(--ink);
+      color: #ffffff;
+    }
+
+    .bottom-cta h2 {
+      margin: 0 0 4px;
+      font-size: 22px;
+    }
+
+    .bottom-cta p {
+      margin: 0;
+      color: #c6cee1;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 700px) {
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 14px 20px;
+      }
+
+      .topbar-nav {
+        flex-wrap: wrap;
+        gap: 12px 18px;
+      }
+
+      .service-grid,
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .bottom-cta {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a href="services.html" class="topbar-brand">RICHERS <span>PRINTING</span></a>
+    <nav class="topbar-nav" aria-label="Main navigation">
+      <a href="#services">Services &amp; Pricing</a>
+      <a href="order.html#orderForm">Place an Order</a>
+      <a href="my-orders.html">My Orders</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <p class="eyebrow">Printing services in Pasig</p>
+      <h1>Good work starts with a clear print plan.</h1>
+      <p class="hero-copy">
+        Explore our printing options, finishing services, and sample rates before setting up your job.
+        Choose your specifications in the order form to see an estimate for your request.
+      </p>
+      <div class="hero-actions">
+        <a class="button" href="order.html#orderForm">Start an Order</a>
+        <a class="button button-secondary" href="#services">Browse Services</a>
+      </div>
+    </section>
+
+    <section id="services" aria-labelledby="servicesHeading">
+      <div class="section-heading">
+        <h2 id="servicesHeading">Services &amp; sample rates</h2>
+        <p>Rates below are estimates in Philippine pesos and may change after the shop reviews your file and requirements.</p>
+      </div>
+
+      <div class="service-grid">
+        <article class="service-card">
+          <h3>Document Printing</h3>
+          <p>Print reports, handouts, forms, and other documents. Select A4 or Letter paper, paper weight, and color option when ordering.</p>
+          <ul class="price-list">
+            <li><span>Black &amp; white</span><strong>₱2 / page</strong></li>
+            <li><span>Full color</span><strong>₱5 / page</strong></li>
+          </ul>
+        </article>
+
+        <article class="service-card">
+          <h3>Sticker &amp; Label Printing</h3>
+          <p>Prepare product labels and sticker designs for glossy A3 sheets. The number of sheets is selected in the order form.</p>
+          <ul class="price-list">
+            <li><span>A3 glossy sheet</span><strong>₱120 / sheet</strong></li>
+          </ul>
+        </article>
+
+        <article class="service-card">
+          <h3>Large-Format Tarpaulin</h3>
+          <p>Order standard-size tarpaulin for events, announcements, and displays. Share any special size requirements with the shop for a quote.</p>
+          <ul class="price-list">
+            <li><span>Standard 3 × 5 ft</span><strong>₱150 / piece</strong></li>
+          </ul>
+        </article>
+
+        <article class="service-card">
+          <h3>Booklets &amp; Finishing</h3>
+          <p>Print booklet pages and choose ring binding, staple binding, or no binding for eligible document and booklet jobs.</p>
+          <ul class="price-list">
+            <li><span>Booklet, black &amp; white</span><strong>₱5 / page</strong></li>
+            <li><span>Booklet, full color</span><strong>₱10 / page</strong></li>
+            <li><span>Ring binding</span><strong>₱45 / copy</strong></li>
+            <li><span>Staple binding</span><strong>₱10 / copy</strong></li>
+          </ul>
+        </article>
+      </div>
+
+      <div class="estimate-note">
+        <strong>About estimates:</strong> Your order form calculates a sample total from the selected service, quantity, and finishing. Final pricing is confirmed by the shop after reviewing the order.
+      </div>
+    </section>
+
+    <section aria-labelledby="nextStepsHeading">
+      <div class="section-heading">
+        <h2 id="nextStepsHeading">What happens next?</h2>
+        <p>A simple flow from your file submission to collection.</p>
+      </div>
+      <div class="info-grid">
+        <article class="info-card">
+          <h3>1. Configure</h3>
+          <p>Choose a service, paper and finishing options, quantity, pickup target, and upload your file.</p>
+        </article>
+        <article class="info-card">
+          <h3>2. Shop review</h3>
+          <p>The shop reviews your file and confirms the job details, price, and pickup timing.</p>
+        </article>
+        <article class="info-card">
+          <h3>3. Track &amp; collect</h3>
+          <p>Track order progress in My Orders. Current payment instructions are cash on pickup at the shop.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="bottom-cta" aria-label="Place a printing order">
+      <div>
+        <h2>Ready to set up your print job?</h2>
+        <p>Build your order and see a sample estimate before you submit it.</p>
+      </div>
+      <a class="button" href="order.html#orderForm">Place an Order</a>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-col">
+        <div class="footer-brand-name">RICHERS <span>PRINTING</span></div>
+        <div class="footer-est">EST. 2026</div>
+        <p class="footer-tagline">Printing, binding and large-format production with verified, trackable orders.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Visit us</h4>
+        <ul>
+          <li>Richers Printing Services</li>
+          <li>Unit 4, Richers Bldg., Shaw Blvd.</li>
+          <li>Pasig City 1600, Metro Manila</li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="tel:+63285550123">(02) 8555 0123</a></li>
+          <li><a href="tel:+639175550123">+63 917 555 0123</a></li>
+          <li><a href="mailto:richersprinting@gmail.com">richersprinting@gmail.com</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 Richers Printing Services. All rights reserved.</span>
+      <span>Service Management &amp; Ordering Process System</span>
+    </div>
+  </footer>
+</body>
+</html>

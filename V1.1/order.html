@@ -5,17 +5,592 @@
 <title>Richers Printing — Configure Printing Job</title>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="footer.css">
-<link rel="stylesheet" href="order.css">
+<style>
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: #f4f5f7;
+  min-height: 100vh;
+}
+
+/* Top bar */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border-bottom: 1px solid #e6e8ee;
+  padding: 16px 32px;
+}
+
+.topbar-brand {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1c2333;
+}
+
+.topbar-brand span {
+  color: #2f6fed;
+  font-weight: 500;
+}
+
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  font-size: 13px;
+}
+
+.topbar-nav a {
+  color: #4b5563;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.topbar-nav a:hover {
+  color: #1c2333;
+}
+
+.topbar-user {
+  color: #1c2333;
+  font-weight: 600;
+}
+
+.topbar-user span {
+  font-weight: 400;
+  color: #8a91a8;
+}
+
+/* Main layout */
+.main {
+  padding: 28px 32px;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e6e8ee;
+  border-radius: 12px;
+  padding: 24px 26px;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1c2333;
+  margin: 0 0 18px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 20px;
+  margin-bottom: 18px;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.field-label {
+  font-size: 12px;
+  color: #555a6b;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.field-input,
+.field-select {
+  padding: 10px 12px;
+  border: 1px solid #cfd3dc;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1c2333;
+  font-family: inherit;
+  background: #ffffff;
+  width: 100%;
+}
+
+.field-input:focus,
+.field-select:focus {
+  outline: none;
+  border-color: #2f6fed;
+}
+
+/* Upload area */
+.upload-zone {
+  border: 2px dashed #cfd3dc;
+  border-radius: 10px;
+  text-align: center;
+  padding: 28px 20px;
+  margin-top: 6px;
+}
+
+.upload-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1c2333;
+  margin-bottom: 4px;
+}
+
+.upload-sub {
+  font-size: 11.5px;
+  color: #8a91a8;
+  margin-bottom: 14px;
+}
+
+.browse-btn {
+  background: #ffffff;
+  border: 1px solid #cfd3dc;
+  color: #1c2333;
+  padding: 9px 16px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.browse-btn:hover {
+  background: #f4f5f7;
+}
+
+.upload-confirm {
+  margin-top: 14px;
+  background: #d9f2e3;
+  color: #1c8a52;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  display: none;
+}
+
+.upload-confirm.show {
+  display: block;
+}
+
+/* Order breakdown panel */
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #333844;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f1f4;
+}
+
+.breakdown-row:last-of-type {
+  border-bottom: none;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e6e8ee;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1c2333;
+}
+
+.total-value {
+  color: #2f6fed;
+  font-size: 17px;
+}
+
+.guarantee-note {
+  background: #eef0f4;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 11.5px;
+  color: #6b7280;
+  line-height: 1.5;
+  margin: 16px 0;
+}
+
+.submit-btn {
+  width: 100%;
+  background: #2f6fed;
+  color: #ffffff;
+  border: none;
+  padding: 13px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.08s ease;
+}
+
+.submit-btn:hover {
+  background: #2660d6;
+}
+
+.submit-btn:active {
+  transform: scale(0.98);
+}
+
+.price-estimate {
+  margin: 16px 0;
+  padding: 14px 16px;
+  border: 1px solid #e6e8ee;
+  border-radius: 8px;
+  background: #fafbfc;
+}
+
+.price-guide,
+.price-disclaimer {
+  color: #6b7280;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.price-breakdown {
+  margin-top: 12px;
+  overflow-x: auto;
+}
+
+.price-breakdown table {
+  width: 100%;
+  min-width: 390px;
+  border-collapse: collapse;
+  color: #333844;
+  font-size: 12px;
+  text-align: left;
+}
+
+.price-breakdown th,
+.price-breakdown td {
+  padding: 8px 6px;
+  border-bottom: 1px solid #e6e8ee;
+}
+
+.price-breakdown th {
+  color: #68718c;
+  font-size: 10px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.price-breakdown th:last-child,
+.price-breakdown td:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.price-breakdown-empty {
+  color: #68718c;
+  text-align: center;
+}
+
+.estimate-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 10px 0 4px;
+  color: #1c2333;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+#orderEstimate {
+  color: #2f6fed;
+  text-align: right;
+}
+
+.submit-estimate {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 14px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: #f6f7fb;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 800;
+  scroll-margin-top: 90px;
+}
+
+.submit-estimate strong {
+  color: var(--blue);
+  text-align: right;
+}
+
+.submit-estimate-note {
+  margin: -8px 0 16px;
+  color: #6b7280;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.demo-payment-qr {
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px dashed #aab4d0;
+  border-radius: 12px;
+  background: #ffffff;
+  text-align: center;
+}
+
+.demo-payment-qr img {
+  display: block;
+  width: 180px;
+  height: 180px;
+  margin: 12px auto;
+  image-rendering: pixelated;
+}
+
+.demo-payment-qr h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.demo-payment-qr p {
+  margin: 0;
+  color: #8a341f;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+/* Order page visual enhancements */
+
+:root {
+  --ink: #0d1b3e;
+  --cyan: #00a8e8;
+  --magenta: #e6007e;
+  --yellow: #ffd400;
+  --blue: #2f6fed;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+}
+
+body {
+  background:
+    radial-gradient(circle at 100% 0, rgba(0, 168, 232, 0.10) 0 180px, transparent 181px),
+    radial-gradient(circle at 0 420px, rgba(230, 0, 126, 0.07) 0 160px, transparent 161px),
+    #f6f7fb;
+}
+
+/* ---------- Top bar ---------- */
+.topbar {
+  background: rgba(246, 247, 251, 0.92);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.topbar-brand {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  color: var(--ink);
+}
+.topbar-brand span { color: var(--blue); }
+.topbar-user {
+  background: var(--yellow);
+  color: var(--ink);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12.5px;
+}
+.topbar-user span { color: var(--ink); }
+
+/* ---------- Banner ---------- */
+.page-banner {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto 26px;
+  padding: 30px 34px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+}
+.page-banner::before {
+  content: "";
+  position: absolute;
+  right: -40px;
+  top: -40px;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background-image: radial-gradient(var(--magenta) 28%, transparent 30%);
+  background-size: 15px 15px;
+  opacity: 0.85;
+}
+.page-banner::after {
+  content: "";
+  position: absolute;
+  right: 130px;
+  bottom: -60px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background-image: radial-gradient(var(--cyan) 28%, transparent 30%);
+  background-size: 15px 15px;
+  opacity: 0.8;
+}
+.banner-title {
+  position: relative;
+  z-index: 1;
+  font-family: var(--display);
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  line-height: 1.1;
+  margin: 0 0 6px;
+}
+.banner-sub {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  max-width: 480px;
+  color: #b8c0d6;
+  font-size: 14.5px;
+}
+
+.main { padding-top: 8px; }
+.content-grid { max-width: 1200px; margin: 0 auto; }
+
+/* ---------- Cards ---------- */
+.card {
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  box-shadow: 7px 7px 0 var(--cyan);
+}
+.content-grid > .card:nth-child(2) { box-shadow: 7px 7px 0 var(--yellow); }
+
+.card-title {
+  font-family: var(--display);
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+
+.field-label { color: var(--ink); }
+.field-input:focus,
+.field-select:focus {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(0, 168, 232, 0.3);
+}
+
+/* ---------- Upload zone ---------- */
+.upload-zone {
+  position: relative;
+  border: 2px dashed var(--ink);
+  border-radius: 14px;
+  background:
+    radial-gradient(rgba(0, 168, 232, 0.18) 26%, transparent 28%) 0 0 / 14px 14px,
+    #ffffff;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+.upload-zone:hover { transform: translateY(-2px); }
+.upload-title { font-family: var(--display); font-size: 17px; font-weight: 800; }
+.browse-btn {
+  background: var(--yellow);
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  font-weight: 800;
+  transition: transform 0.1s ease;
+}
+.browse-btn:hover { background: #ffe14d; }
+.browse-btn:active { transform: scale(0.96); }
+
+/* ---------- Order breakdown as a receipt ---------- */
+.receipt {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  margin-bottom: 14px;
+}
+.receipt::after {
+  content: "";
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  bottom: -12px;
+  height: 12px;
+  background:
+    linear-gradient(135deg, #ffffff 50%, transparent 50%) 0 0 / 16px 16px,
+    linear-gradient(225deg, #ffffff 50%, transparent 50%) 0 0 / 16px 16px;
+  background-repeat: repeat-x;
+  filter: drop-shadow(7px 5px 0 var(--yellow));
+}
+.receipt { position: relative; }
+
+.breakdown-empty {
+  border-color: var(--ink);
+  background:
+    repeating-linear-gradient(135deg, transparent 0 10px, rgba(13, 27, 62, 0.035) 10px 20px),
+    #ffffff;
+}
+.breakdown-empty-icon { font-size: 30px; }
+.breakdown-empty p { font-family: var(--display); font-size: 17px; font-weight: 800; }
+
+.total-row { border-top: 2px dashed var(--ink); }
+.total-row span:first-child { font-family: var(--display); font-size: 16px; }
+
+.guarantee-note {
+  background: #fff9d6;
+  border-left: 4px solid var(--yellow);
+  color: #4b4a2f;
+}
+
+.submit-btn {
+  background: var(--ink);
+  border: 2px solid var(--ink);
+  font-size: 15px;
+}
+.submit-btn:hover { background: #142a5c; }
+
+@media (max-width: 860px) {
+  .content-grid { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .topbar { padding: 12px 18px; flex-wrap: wrap; gap: 10px; }
+  .topbar-nav { gap: 14px; flex-wrap: wrap; }
+  .main { padding: 18px; }
+  .page-banner { padding: 24px 22px; }
+}
+
+/* ===== Quotation logic helpers ===== */
+.field-group.full { grid-column: 1 / -1; }
+.field-select:disabled { background: #f0f1f4; color: #8a91a8; cursor: not-allowed; }
+.breakdown-row small { color: #8a91a8; }
+
+/* ===== Dropdown placeholder ("See details") ===== */
+.field-select:required:invalid { color: #8a91a8; }
+.field-select option { color: #1c2333; }
+</style>
 </head>
 <body>
 
   <!-- Top bar -->
   <div class="topbar">
-    <a href="landing.html" class="topbar-brand">RICHERS <span>PRINTING</span></a>
+    <a href="order.html#orderForm" class="topbar-brand">RICHERS <span>PRINTING</span></a>
     <div class="topbar-nav">
-      <a href="#">Services & Pricing</a>
-      <a href="#">Track Order</a>
-      <a href="#">My Orders</a>
+      <a href="services.html">Services &amp; Pricing</a>
+      <a href="my-orders.html#orders">Track Order</a>
+      <a href="my-orders.html">My Orders</a>
       <span class="topbar-user" id="userGreeting">Hi, Customer</span>
       <a href="#" id="logoutLink">Logout</a>
     </div>
@@ -82,9 +657,38 @@
             </div>
 
             <div class="field-group">
+              <label class="field-label" for="itemQuantity" id="itemQuantityLabel">Pages per Copy</label>
+              <input type="number" class="field-input" id="itemQuantity" value="1" min="1">
+            </div>
+
+            <div class="field-group">
               <label class="field-label" for="pickupInput">Target Pickup Date</label>
               <input type="text" class="field-input" id="pickupInput" value="July 30, 2026 - 3:00 PM">
             </div>
+          </div>
+
+          <div class="price-estimate" id="priceEstimate" aria-live="polite">
+            <div class="price-guide">
+              Sample rates: document color ₱5/page, black &amp; white ₱2/page; stickers ₱120/A3 sheet;
+              standard 3×5 ft tarpaulin ₱150/piece; booklet ₱10/color page or ₱5/black-and-white page;
+              ring binding ₱45/copy and staple binding ₱10/copy.
+            </div>
+            <div class="price-breakdown">
+              <table aria-label="Estimated price breakdown">
+                <thead>
+                  <tr>
+                    <th scope="col">Item</th>
+                    <th scope="col">Calculation</th>
+                    <th scope="col">Amount</th>
+                  </tr>
+                </thead>
+                <tbody id="orderBreakdown">
+                  <tr><td class="price-breakdown-empty" colspan="3">Choose your options to see a breakdown.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="estimate-total">Estimated total <strong id="orderEstimate">Choose your options to see an estimate</strong></div>
+            <div class="price-disclaimer">Estimates only; confirm final pricing with the shop. Paper and color selections are included in the service rate.</div>
           </div>
 
           <div class="upload-zone">
@@ -104,6 +708,21 @@
         <div class="guarantee-note">
           Anti-Scam Ownership Guarantee: Your account details (<b id="noteName">your account</b>) will be linked to your transaction number for shop verification upon store pickup.
         </div>
+
+        <div class="submit-estimate" id="submitEstimate" aria-live="polite">
+          <span>Estimated total</span>
+          <strong id="submitOrderEstimate">Choose your options to see an estimate</strong>
+        </div>
+        <p class="submit-estimate-note">This is a sample estimate. The shop will confirm the final price.</p>
+
+        <section class="demo-payment-qr" aria-labelledby="demoPaymentTitle">
+          <h3 id="demoPaymentTitle"></h3>
+          <img
+            src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAADcAQMAAAAhlF3CAAAABlBMVEX///8AAABVwtN+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABUElEQVRYheWYsbGDQAxE5SEgpARKoTQozaVcCYQEN5alXR3G8xnn/6TABh4Jy91qhcivWhVV5aHt0shLWrqCG87roCqqT5HpGCvuWTLBRXUfXSHVjQpVHCeEUCgBtItqe6NgJeSDsR1eBsVvlJu90jsMYwRcn3Mxhf64Zu/wq2yZzHrIff1vCBF2PreLYH9HCJIJ4u1LiwLzDmOkSWaBkIhdEFFg3keuE1eoI2is2IMPNH2xlQCmiD9ZIPyOeRdv324UjwXoiFngGkY/wBPoD/UqXwroe3/SMwqUyYwR00Abg3qBS2vrLfe5D/I4ETRP+HRBU6hVHtiKy8SXTCh0rQ7gygc+Z3vLfej2ueDmvxEFrAuWU6GlJIILB/+XMOvFdmAeygbZ/n3mjSB8VagryNm+1ZYKcjtE5LGZ19LvaYxZIPX4fOCQCL+3X3k6hb/qDY+D04Q6C/l2AAAAAElFTkSuQmCC"
+            alt="Demo QR code. Scanning displays that this is not a payment."
+          >
+          <p>This is a demo only—not payable. Scanning it will not send money or mark an order as paid.</p>
+        </section>
 
         <button type="submit" form="orderForm" class="submit-btn">Submit Printing Order</button>
       </div>
@@ -149,6 +768,253 @@
     </div>
   </footer>
 
-  <script src="order.js"></script>
+  <script>
+// ===== Auth guard: only logged-in users can view this page =====
+const currentUser = JSON.parse(localStorage.getItem('richersCurrentUser') || 'null');
+
+if (!currentUser) {
+  window.location.href = 'login.html';
+}
+
+// ===== Greeting =====
+function formatGreetingName(fullName) {
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0];
+  const last = parts.pop();
+  return parts.join(' ') + ' ' + last.charAt(0).toUpperCase() + '.';
+}
+
+if (currentUser) {
+  const shortName = formatGreetingName(currentUser.fullName);
+  document.getElementById('userGreeting').textContent = 'Hi, ' + shortName + ' (Customer)';
+  document.getElementById('noteName').textContent = shortName;
+}
+
+// ===== Logout =====
+document.getElementById('logoutLink').addEventListener('click', function (e) {
+  e.preventDefault();
+  localStorage.removeItem('richersCurrentUser');
+  window.location.href = 'login.html';
+});
+
+// ===== File upload mock =====
+const browseBtn = document.getElementById('browseBtn');
+const fileInput = document.getElementById('fileInput');
+const uploadConfirm = document.getElementById('uploadConfirm');
+const serviceType = document.getElementById('serviceType');
+const paperType = document.getElementById('paperType');
+const colorOption = document.getElementById('colorOption');
+const bindingOption = document.getElementById('bindingOption');
+const copiesInput = document.getElementById('copiesInput');
+const itemQuantity = document.getElementById('itemQuantity');
+const itemQuantityLabel = document.getElementById('itemQuantityLabel');
+const orderEstimate = document.getElementById('orderEstimate');
+const submitOrderEstimate = document.getElementById('submitOrderEstimate');
+const orderBreakdown = document.getElementById('orderBreakdown');
+
+const SAMPLE_PRICES = {
+  documentColorPage: 5,
+  documentBwPage: 2,
+  stickerSheet: 120,
+  tarpPiece: 150,
+  bookletColorPage: 10,
+  bookletBwPage: 5,
+  ringBindingCopy: 45,
+  stapleBindingCopy: 10
+};
+
+function buildLineItems() {
+  const service = serviceType.value;
+  const copies = Number.parseInt(copiesInput.value, 10);
+  const unitsPerCopy = Number.parseInt(itemQuantity.value, 10);
+  if (!service || !paperType.value || !colorOption.value || !bindingOption.value ||
+      !copies || copies < 1 || !unitsPerCopy || unitsPerCopy < 1) return null;
+
+  let description;
+  let unitPrice;
+  let quantity;
+  let unit;
+
+  if (service === 'doc') {
+    description = 'Document printing (' + colorOption.selectedOptions[0].textContent + ', ' +
+      paperType.selectedOptions[0].textContent + ')';
+    unitPrice = colorOption.value === 'color' ? SAMPLE_PRICES.documentColorPage : SAMPLE_PRICES.documentBwPage;
+    quantity = copies * unitsPerCopy;
+    unit = 'pages';
+  } else if (service === 'sticker') {
+    description = 'Sticker & label printing (A3 glossy sheet)';
+    unitPrice = SAMPLE_PRICES.stickerSheet;
+    quantity = copies * unitsPerCopy;
+    unit = 'sheets';
+  } else if (service === 'tarp') {
+    description = 'Standard 3×5 ft tarpaulin';
+    unitPrice = SAMPLE_PRICES.tarpPiece;
+    quantity = copies;
+    unit = 'pieces';
+  } else {
+    description = 'Booklet printing (' + colorOption.selectedOptions[0].textContent + ', ' +
+      paperType.selectedOptions[0].textContent + ')';
+    unitPrice = colorOption.value === 'color' ? SAMPLE_PRICES.bookletColorPage : SAMPLE_PRICES.bookletBwPage;
+    quantity = copies * unitsPerCopy;
+    unit = 'pages';
+  }
+
+  const lineItems = [{
+    description: description,
+    quantity: quantity,
+    unit: unit,
+    unitPrice: unitPrice,
+    total: quantity * unitPrice
+  }];
+
+  if (service === 'doc' || service === 'booklet') {
+    let finishingPrice = 0;
+    if (bindingOption.value === 'ring') finishingPrice = SAMPLE_PRICES.ringBindingCopy;
+    if (bindingOption.value === 'staple') finishingPrice = SAMPLE_PRICES.stapleBindingCopy;
+    if (finishingPrice > 0) {
+      lineItems.push({
+        description: bindingOption.selectedOptions[0].textContent,
+        quantity: copies,
+        unit: 'copies',
+        unitPrice: finishingPrice,
+        total: copies * finishingPrice
+      });
+    }
+  }
+
+  return lineItems;
+}
+
+function updateEstimate() {
+  const service = serviceType.value;
+  itemQuantityLabel.textContent = service === 'sticker'
+    ? 'A3 Sheets per Copy'
+    : service === 'tarp'
+      ? 'Pages / sheets (not used for tarpaulin)'
+      : 'Pages per Copy';
+  itemQuantity.disabled = service === 'tarp';
+  if (service === 'tarp') itemQuantity.value = '1';
+
+  const lineItems = buildLineItems();
+  const estimate = lineItems
+    ? formatCurrency(lineItems.reduce(function (sum, item) { return sum + item.total; }, 0))
+    : 'Choose your options to see an estimate';
+  orderEstimate.textContent = estimate;
+  submitOrderEstimate.textContent = estimate;
+
+  if (!lineItems) {
+    orderBreakdown.replaceChildren();
+    const emptyRow = document.createElement('tr');
+    const emptyCell = document.createElement('td');
+    emptyCell.className = 'price-breakdown-empty';
+    emptyCell.colSpan = 3;
+    emptyCell.textContent = 'Choose your options to see a breakdown.';
+    emptyRow.appendChild(emptyCell);
+    orderBreakdown.appendChild(emptyRow);
+    return;
+  }
+
+  orderBreakdown.replaceChildren();
+  lineItems.forEach(function (item) {
+    const row = document.createElement('tr');
+    const description = document.createElement('td');
+    const calculation = document.createElement('td');
+    const amount = document.createElement('td');
+
+    description.textContent = item.description;
+    calculation.textContent = item.quantity + ' ' + item.unit + ' × ' + formatCurrency(item.unitPrice);
+    amount.textContent = formatCurrency(item.total);
+    row.append(description, calculation, amount);
+    orderBreakdown.appendChild(row);
+  });
+}
+
+function formatCurrency(amount) {
+  return new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP',
+    minimumFractionDigits: 2
+  }).format(amount);
+}
+
+[serviceType, paperType, colorOption, bindingOption, copiesInput, itemQuantity].forEach(function (input) {
+  input.addEventListener('change', updateEstimate);
+  input.addEventListener('input', updateEstimate);
+});
+updateEstimate();
+
+browseBtn.addEventListener('click', function () {
+  fileInput.click();
+});
+
+fileInput.addEventListener('change', function () {
+  if (fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+    uploadConfirm.textContent = '✓ ' + file.name + ' (' + sizeMB + 'MB) Uploaded';
+    uploadConfirm.classList.add('show');
+  } else {
+    uploadConfirm.classList.remove('show');
+  }
+});
+
+// ===== Basic form check =====
+function getMissing() {
+  const missing = [];
+  [['serviceType', 'service type'], ['paperType', 'paper type'], ['colorOption', 'color option'], ['bindingOption', 'binding / finishing']]
+    .forEach(function (f) {
+      if (!document.getElementById(f[0]).value) missing.push(f[1]);
+    });
+  const copies = parseInt(document.getElementById('copiesInput').value, 10);
+  if (!copies || copies < 1) missing.push('number of copies');
+  const quantity = parseInt(itemQuantity.value, 10);
+  if (!quantity || quantity < 1) missing.push('page or sheet quantity');
+  if (!document.getElementById('pickupInput').value.trim()) missing.push('pickup date');
+  if (fileInput.files.length === 0) missing.push('your file');
+  return missing;
+}
+
+// ===== Submit order =====
+document.getElementById('orderForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  const missing = getMissing();
+  if (missing.length > 0) {
+    alert('Please complete the form first. Still needed: ' + missing.join(', ') + '.');
+    return;
+  }
+
+  const orders = JSON.parse(localStorage.getItem('richersOrders') || '[]');
+  const timestamp = Date.now();
+  let orderId = 'RPS-' + String(timestamp).slice(-6);
+  while (orders.some(function (order) { return order.id === orderId; })) {
+    orderId = 'RPS-' + String(Number(orderId.slice(4)) + 1).padStart(6, '0');
+  }
+
+  const order = {
+    id: orderId,
+    ownerEmail: currentUser.email,
+    customerName: currentUser.fullName,
+    customerContact: currentUser.contact || '',
+    serviceType: serviceType.value,
+    service: document.getElementById('serviceType').selectedOptions[0].textContent,
+    paper: document.getElementById('paperType').selectedOptions[0].textContent,
+    color: document.getElementById('colorOption').selectedOptions[0].textContent,
+    binding: document.getElementById('bindingOption').selectedOptions[0].textContent,
+    copies: parseInt(document.getElementById('copiesInput').value, 10),
+    itemQuantity: parseInt(itemQuantity.value, 10),
+    pickup: document.getElementById('pickupInput').value.trim(),
+    fileName: fileInput.files[0].name,
+    lineItems: buildLineItems(),
+    pricingNote: 'Sample estimate; confirm final pricing with the shop.',
+    status: 'Received',
+    createdAt: new Date().toISOString()
+  };
+  order.total = order.lineItems.reduce(function (sum, item) { return sum + item.total; }, 0);
+  orders.unshift(order);
+  localStorage.setItem('richersOrders', JSON.stringify(orders));
+
+  alert('Printing order submitted successfully! You can track its progress under "My Orders".');
+});
+</script>
 </body>
 </html>

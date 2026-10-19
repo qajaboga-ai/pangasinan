@@ -4,6 +4,271 @@
 <meta charset="UTF-8">
 <title>Richers Admin — Registered Accounts & Verification Center</title>
 <link rel="stylesheet" href="styles.css">
+<style>
+:root {
+  --sidebar-bg: #12182b;
+  --sidebar-active: #1d2540;
+  --sidebar-text: #8a91a8;
+  --sidebar-text-active: #ffffff;
+  --accent-blue: #2f6fed;
+  --page-bg: #f4f5f7;
+  --card-bg: #ffffff;
+  --border-color: #e6e8ee;
+  --table-header-bg: #eef0f4;
+  --text-dark: #1c2333;
+  --text-muted: #8a91a8;
+  --green-bg: #d9f2e3;
+  --green-text: #1c8a52;
+  --red-bg: #fbdede;
+  --red-text: #d1424a;
+  --yellow-bg: #fbf0d1;
+  --yellow-text: #9a7a12;
+  --blue-bg: #e1ebfd;
+  --blue-text: #2f6fed;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--page-bg);
+  min-height: 100vh;
+}
+
+.app-frame {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  background: var(--page-bg);
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  background: var(--sidebar-bg);
+  padding: 22px 16px;
+  flex-shrink: 0;
+  min-height: 100vh;
+}
+
+.brand {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+  margin: 4px 4px 28px;
+}
+
+.brand span {
+  color: var(--accent-blue);
+}
+
+.nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: 8px;
+  color: var(--sidebar-text);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.nav-item .icon {
+  font-size: 15px;
+  width: 18px;
+  text-align: center;
+}
+
+.nav-item.active {
+  background: var(--sidebar-active);
+  color: var(--sidebar-text-active);
+}
+
+.nav-item:not(.active):hover {
+  color: #c3c8d9;
+}
+
+/* Main content */
+.main {
+  flex: 1;
+  padding: 28px 32px;
+  min-width: 0;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 22px;
+}
+
+.page-title {
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0 0 6px;
+}
+
+.page-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  background: var(--table-header-bg);
+  text-align: left;
+  padding: 16px 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: #6b7280;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-color);
+}
+
+tbody td {
+  padding: 18px 20px;
+  font-size: 13.5px;
+  color: var(--text-dark);
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.account-id {
+  font-weight: 500;
+  color: var(--text-dark);
+}
+
+.user-name {
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.contact {
+  color: #4b5563;
+}
+
+.orders {
+  color: var(--text-dark);
+}
+
+.role-pill {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.role-customer {
+  background: var(--blue-bg);
+  color: var(--blue-text);
+}
+
+.role-staff {
+  background: var(--yellow-bg);
+  color: var(--yellow-text);
+}
+
+.role-manager {
+  background: var(--green-bg);
+  color: var(--green-text);
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.status-verified {
+  background: var(--green-bg);
+  color: var(--green-text);
+}
+
+.status-active {
+  background: var(--green-bg);
+  color: var(--green-text);
+}
+
+.status-pending {
+  background: var(--yellow-bg);
+  color: var(--yellow-text);
+}
+
+.action-link {
+  color: var(--accent-blue);
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.action-link:hover {
+  text-decoration: underline;
+}
+
+.account-action {
+  border: 0;
+  padding: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.records-summary {
+  margin: 0 0 16px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.records-empty {
+  padding: 28px 20px;
+  color: var(--text-muted);
+  text-align: center;
+}
+</style>
 </head>
 <body>
 
@@ -11,7 +276,7 @@
   <div class="sidebar">
     <div class="brand">RICHERS <span>ADMIN</span></div>
 
-    <a href="dashboard.html" class="nav-item"><span class="icon">📊</span> Dashboard</a>
+    <a href="admindashboard.html" class="nav-item"><span class="icon">📊</span> Dashboard</a>
     <a href="transaction-details.html" class="nav-item"><span class="icon">📦</span> Transactions</a>
     <a href="inventory.html" class="nav-item"><span class="icon">🖨️</span> Inventory &amp; Supplies</a>
     <a href="customers.html" class="nav-item active"><span class="icon">👥</span> Customer Records</a>
@@ -23,6 +288,8 @@
     <div class="page-header">
       <h1 class="page-title">Registered Accounts &amp; Verification Center</h1>
     </div>
+
+    <p class="records-summary" id="recordsSummary" aria-live="polite">Loading registered accounts…</p>
 
     <div class="card">
       <table>
@@ -37,47 +304,138 @@
             <th>Action</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td class="account-id">USR-1092</td>
-            <td class="user-name">Andrei Joaquin A.</td>
-            <td class="contact">joaquin.andrei@gmail.com</td>
-            <td><span class="role-pill role-customer">CUSTOMER</span></td>
-            <td class="orders">14 Orders</td>
-            <td><span class="status-pill status-verified">VERIFIED IDENTITY</span></td>
-            <td><a href="#" class="action-link">Manage</a></td>
-          </tr>
-          <tr>
-            <td class="account-id">USR-0012</td>
-            <td class="user-name">Elena Ramirez</td>
-            <td class="contact">elena.staff@richers.ph</td>
-            <td><span class="role-pill role-staff">SHOP STAFF</span></td>
-            <td class="orders">N/A (Staff)</td>
-            <td><span class="status-pill status-active">ACTIVE EMPLOYEE</span></td>
-            <td><a href="#" class="action-link">Edit Permissions</a></td>
-          </tr>
-          <tr>
-            <td class="account-id">USR-0002</td>
-            <td class="user-name">Manager Marco</td>
-            <td class="contact">marco.manager@richers.ph</td>
-            <td><span class="role-pill role-manager">MANAGER</span></td>
-            <td class="orders">N/A (Manager)</td>
-            <td><span class="status-pill status-active">ACTIVE EMPLOYEE</span></td>
-            <td><a href="#" class="action-link">Edit Permissions</a></td>
-          </tr>
-          <tr>
-            <td class="account-id">USR-1095</td>
-            <td class="user-name">Kevin Cruz</td>
-            <td class="contact">kevin.cruz99@gmail.com</td>
-            <td><span class="role-pill role-customer">CUSTOMER</span></td>
-            <td class="orders">1 Order</td>
-            <td><span class="status-pill status-pending">PENDING ID CHECK</span></td>
-            <td><a href="#" class="action-link">Verify Account</a></td>
-          </tr>
+        <tbody id="customerRecords">
+          <tr><td colspan="7" class="records-empty">Loading registered accounts…</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
+  <script>
+  const ACCOUNTS_KEY = 'richersAccounts';
+  const ORDERS_KEY = 'richersOrders';
+  const recordsBody = document.getElementById('customerRecords');
+  const recordsSummary = document.getElementById('recordsSummary');
+
+  renderCustomerRecords();
+
+  window.addEventListener('storage', function (event) {
+    if (event.key === ACCOUNTS_KEY || event.key === ORDERS_KEY) {
+      renderCustomerRecords();
+    }
+  });
+
+  recordsBody.addEventListener('click', function (event) {
+    const verifyButton = event.target.closest('[data-verify-account]');
+    if (!verifyButton) return;
+
+    const accounts = readStoredArray(ACCOUNTS_KEY);
+    const account = accounts.find(function (item) {
+      return item.accountId === verifyButton.dataset.verifyAccount;
+    });
+    if (!account) return;
+
+    account.isVerified = true;
+    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+    renderCustomerRecords();
+  });
+
+  function readStoredArray(key) {
+    const value = JSON.parse(localStorage.getItem(key) || '[]');
+    if (!Array.isArray(value)) {
+      throw new Error('Expected ' + key + ' to contain a JSON array.');
+    }
+    return value;
+  }
+
+  function ensureAccountIds(accounts) {
+    let nextId = accounts.reduce(function (largest, account) {
+      const match = /^USR-(\d+)$/.exec(account.accountId || '');
+      return match ? Math.max(largest, Number(match[1])) : largest;
+    }, 0) + 1;
+    let changed = false;
+
+    accounts.forEach(function (account) {
+      if (!account.accountId) {
+        account.accountId = 'USR-' + String(nextId).padStart(4, '0');
+        nextId += 1;
+        changed = true;
+      }
+    });
+
+    if (changed) localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+  }
+
+  function renderCustomerRecords() {
+    const accounts = readStoredArray(ACCOUNTS_KEY);
+    const orders = readStoredArray(ORDERS_KEY);
+    ensureAccountIds(accounts);
+
+    recordsSummary.textContent = accounts.length + ' registered ' +
+      (accounts.length === 1 ? 'account' : 'accounts');
+    recordsBody.replaceChildren();
+
+    if (accounts.length === 0) {
+      const row = document.createElement('tr');
+      const cell = document.createElement('td');
+      cell.colSpan = 7;
+      cell.className = 'records-empty';
+      cell.textContent = 'No customer accounts have been registered yet.';
+      row.appendChild(cell);
+      recordsBody.appendChild(row);
+      return;
+    }
+
+    accounts.forEach(function (account) {
+      const orderCount = orders.filter(function (order) {
+        return order.ownerEmail && account.email &&
+          order.ownerEmail.toLowerCase() === account.email.toLowerCase();
+      }).length;
+      const row = document.createElement('tr');
+
+      row.appendChild(createCell(account.accountId, 'account-id'));
+      row.appendChild(createCell(account.fullName || 'Name not provided', 'user-name'));
+      row.appendChild(createCell(
+        [account.contact, account.email].filter(Boolean).join(' / ') || 'Contact not provided',
+        'contact'
+      ));
+      row.appendChild(createPillCell('CUSTOMER', 'role-pill role-customer'));
+      row.appendChild(createCell(orderCount + (orderCount === 1 ? ' Order' : ' Orders'), 'orders'));
+
+      if (account.isVerified) {
+        row.appendChild(createPillCell('VERIFIED IDENTITY', 'status-pill status-verified'));
+        row.appendChild(createCell('Verified', ''));
+      } else {
+        row.appendChild(createPillCell('PENDING VERIFICATION', 'status-pill status-pending'));
+        const actionCell = document.createElement('td');
+        const verifyButton = document.createElement('button');
+        verifyButton.type = 'button';
+        verifyButton.className = 'action-link account-action';
+        verifyButton.dataset.verifyAccount = account.accountId;
+        verifyButton.textContent = 'Verify Account';
+        actionCell.appendChild(verifyButton);
+        row.appendChild(actionCell);
+      }
+
+      recordsBody.appendChild(row);
+    });
+  }
+
+  function createCell(text, className) {
+    const cell = document.createElement('td');
+    if (className) cell.className = className;
+    cell.textContent = text;
+    return cell;
+  }
+
+  function createPillCell(text, className) {
+    const cell = document.createElement('td');
+    const pill = document.createElement('span');
+    pill.className = className;
+    pill.textContent = text;
+    cell.appendChild(pill);
+    return cell;
+  }
+  </script>
 </body>
 </html>

@@ -5,7 +5,361 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Richers Printing — Login</title>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="login.css">
+<style>
+:root {
+  --ink: #0d1b3e;
+  --cyan: #00a8e8;
+  --magenta: #e6007e;
+  --yellow: #ffd400;
+  --blue: #2f6fed;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 32px 20px;
+  background:
+    radial-gradient(circle at 100% 0, rgba(0, 168, 232, 0.12) 0 200px, transparent 201px),
+    radial-gradient(circle at 0 100%, rgba(230, 0, 126, 0.08) 0 220px, transparent 221px),
+    #f6f7fb;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.login-shell {
+  display: grid;
+  width: 100%;
+  max-width: 980px;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+  border: 2px solid var(--ink);
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 10px 10px 0 var(--yellow);
+}
+
+.login-art {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 32px;
+  overflow: hidden;
+  padding: 40px 36px;
+  background: var(--ink);
+  color: #ffffff;
+}
+
+.art-dots {
+  position: absolute;
+  border-radius: 50%;
+  background-size: 15px 15px;
+  pointer-events: none;
+}
+
+.art-dots-m {
+  top: -70px;
+  right: -70px;
+  width: 240px;
+  height: 240px;
+  background-image: radial-gradient(var(--magenta) 28%, transparent 30%);
+  opacity: 0.9;
+}
+
+.art-dots-c {
+  bottom: 40px;
+  left: -80px;
+  width: 220px;
+  height: 220px;
+  background-image: radial-gradient(var(--cyan) 28%, transparent 30%);
+  opacity: 0.55;
+}
+
+.brand-link {
+  position: relative;
+  z-index: 1;
+  color: inherit;
+  text-decoration: none;
+}
+
+.brand-title {
+  margin: 0 0 4px;
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.brand-subtitle {
+  margin: 0;
+  color: #aab4d0;
+  font-size: 12.5px;
+}
+
+.art-copy {
+  position: relative;
+  z-index: 1;
+}
+
+.art-headline {
+  margin: 0 0 12px;
+  font-family: var(--display);
+  font-size: clamp(36px, 4.4vw, 52px);
+  font-weight: 800;
+  letter-spacing: -1.2px;
+  line-height: 1.02;
+  text-shadow: -3px 2px 0 rgba(0, 168, 232, 0.6), 3px -2px 0 rgba(230, 0, 126, 0.5);
+}
+
+.art-text {
+  max-width: 300px;
+  margin: 0;
+  color: #c3cbe0;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.mini-ticket {
+  position: relative;
+  z-index: 1;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: #ffffff;
+  color: var(--ink);
+  box-shadow: 6px 6px 0 rgba(255, 212, 0, 0.9);
+  transform: rotate(-2deg);
+}
+
+.mini-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.mini-id {
+  font-family: var(--display);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.mini-state {
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--yellow);
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.mini-job {
+  margin-bottom: 12px;
+  color: #5b6270;
+  font-size: 12.5px;
+}
+
+.mini-bar {
+  overflow: hidden;
+  height: 6px;
+  border-radius: 6px;
+  background: #e5e8f2;
+}
+
+.mini-bar i {
+  display: block;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan), var(--magenta));
+}
+
+.login-card {
+  width: 100%;
+  padding: 40px 40px 32px;
+}
+
+.form-title {
+  margin: 0 0 22px;
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.field-group {
+  margin-bottom: 16px;
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.field-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #cfd3dc;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #1c2333;
+  font-family: inherit;
+  font-size: 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(0, 168, 232, 0.3);
+}
+
+.field-input.error {
+  border-color: #d1424a;
+}
+
+.options-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 14px 0 20px;
+  color: #555a6b;
+  font-size: 12.5px;
+}
+
+.remember-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.forgot-link {
+  color: var(--blue);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.forgot-link:hover,
+.signup-line a:hover {
+  text-decoration: underline;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 13px 18px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: var(--ink);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 var(--cyan);
+  transition: background 0.15s ease, transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.login-btn:hover {
+  background: #142a5c;
+}
+
+.login-btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 var(--cyan);
+}
+
+.login-btn:focus-visible,
+.field-input:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.signup-line {
+  margin: 18px 0 0;
+  color: #555a6b;
+  font-size: 13px;
+  text-align: center;
+}
+
+.signup-line a {
+  color: var(--blue);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.error-banner {
+  display: none;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-left: 4px solid #d1424a;
+  border-radius: 8px;
+  background: #fbdede;
+  color: #d1424a;
+  font-size: 12.5px;
+}
+
+.error-banner.show {
+  display: block;
+}
+
+.notice-box {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border-left: 4px solid var(--yellow);
+  border-radius: 8px;
+  background: #fff9d6;
+  color: #4b4a2f;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+@media (max-width: 800px) {
+  .login-shell {
+    max-width: 480px;
+    grid-template-columns: 1fr;
+  }
+
+  .login-art {
+    gap: 20px;
+    padding: 28px 26px;
+  }
+
+  .mini-ticket,
+  .art-text {
+    display: none;
+  }
+
+  .art-headline {
+    margin: 0;
+    font-size: 34px;
+  }
+
+  .login-card {
+    padding: 30px 26px 26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-btn,
+  .field-input {
+    transition: none;
+  }
+}
+</style>
 </head>
 <body>
 
@@ -72,6 +426,61 @@
 
   </div>
 
-  <script src="login.js"></script>
+  <script>
+  const ADMIN_EMAIL = 'admin@gmail.com';
+  const ADMIN_PASSWORD = 'admin123';
+
+  const form = document.getElementById('loginForm');
+  const errorBanner = document.getElementById('errorBanner');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+
+  function showError(message) {
+    errorBanner.textContent = message;
+    errorBanner.classList.add('show');
+    emailInput.classList.add('error');
+    passwordInput.classList.add('error');
+  }
+
+  function clearError() {
+    errorBanner.classList.remove('show');
+    emailInput.classList.remove('error');
+    passwordInput.classList.remove('error');
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    clearError();
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!email || !password) {
+      showError('Please enter both email and password.');
+      return;
+    }
+
+    if (email.toLowerCase() === ADMIN_EMAIL.toLowerCase() && password === ADMIN_PASSWORD) {
+      localStorage.removeItem('richersCurrentUser');
+      localStorage.setItem('richersRole', 'admin');
+      window.location.href = 'admindashboard.html';
+      return;
+    }
+
+    const accounts = JSON.parse(localStorage.getItem('richersAccounts') || '[]');
+    const match = accounts.find(function (acc) {
+      return acc.email.toLowerCase() === email.toLowerCase() && acc.password === password;
+    });
+
+    if (!match) {
+      showError('Invalid email or password. Please create an account first.');
+      return;
+    }
+
+    localStorage.setItem('richersCurrentUser', JSON.stringify(match));
+    localStorage.setItem('richersRole', 'customer');
+    window.location.href = 'order.html';
+  });
+  </script>
 </body>
 </html>

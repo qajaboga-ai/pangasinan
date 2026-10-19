@@ -11,7 +11,7 @@
   <div class="sidebar">
     <div class="brand">RICHERS <span>ADMIN</span></div>
 
-    <a href="dashboard.html" class="nav-item"><span class="icon">📊</span> Dashboard</a>
+    <a href="admindashboard.html" class="nav-item"><span class="icon">📊</span> Dashboard</a>
     <a href="transaction-details.html" class="nav-item"><span class="icon">📦</span> Transactions</a>
     <a href="inventory.html" class="nav-item"><span class="icon">🖨️</span> Inventory &amp; Supplies</a>
     <a href="customers.html" class="nav-item"><span class="icon">👥</span> Customer Records</a>
@@ -29,65 +29,164 @@
     <div class="filter-card">
       <div class="filter-group">
         <div><b>Timeframe:</b> Monthly Summary</div>
-        <div><b>Period:</b> July 2026</div>
+        <div><b>Period:</b> <span id="reportPeriod">Current month</span></div>
         <div><b>Service Filter:</b> All Printing Services</div>
       </div>
-      <button class="generate-btn">Generate Summary</button>
+      <button class="generate-btn" id="refreshReport">Refresh Summary</button>
     </div>
 
     <!-- Report table -->
     <div class="card">
-      <div class="card-title">Monthly Revenue Summary by Service Category</div>
+      <div class="card-title">Monthly Estimated Order Value by Service Category</div>
       <table>
         <thead>
           <tr>
             <th>Service Category</th>
-            <th>Jobs Completed</th>
+            <th>Orders</th>
             <th>Total Volume / Units</th>
-            <th>Gross Revenue</th>
+            <th>Estimated Value</th>
             <th>Share of Total</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td class="category-name">Document Printing (A4/Letter)</td>
-            <td class="jobs">412 Jobs</td>
-            <td class="volume">32,400 Pages</td>
-            <td class="revenue">₱162,000.00</td>
-            <td class="share">42.5%</td>
-          </tr>
-          <tr>
-            <td class="category-name">Large Format Tarpaulin</td>
-            <td class="jobs">85 Jobs</td>
-            <td class="volume">1,450 Sq. Ft.</td>
-            <td class="revenue">₱108,750.00</td>
-            <td class="share">28.5%</td>
-          </tr>
-          <tr>
-            <td class="category-name">Sticker &amp; Label Printing</td>
-            <td class="jobs">120 Jobs</td>
-            <td class="volume">850 Sheets</td>
-            <td class="revenue">₱59,500.00</td>
-            <td class="share">15.6%</td>
-          </tr>
-          <tr>
-            <td class="category-name">Booklet Binding &amp; Finishing</td>
-            <td class="jobs">190 Jobs</td>
-            <td class="volume">380 Units</td>
-            <td class="revenue">₱50,950.00</td>
-            <td class="share">13.4%</td>
-          </tr>
-          <tr class="total-row">
-            <td>TOTAL MONTHLY SALES</td>
-            <td>807 Jobs</td>
-            <td>—</td>
-            <td>₱381,200.00</td>
-            <td>100.0%</td>
-          </tr>
+        <tbody id="reportRows">
+          <tr><td colspan="5">Loading saved orders…</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
+  <script>
+  const REPORT_CATEGORIES = {
+    doc: { name: 'Document Printing (A4/Letter)', unit: 'pages' },
+    tarp: { name: 'Large Format Tarpaulin', unit: 'pieces' },
+    sticker: { name: 'Sticker & Label Printing', unit: 'sheets' },
+    booklet: { name: 'Booklet Binding & Finishing', unit: 'pages' }
+  };
+
+  renderReport();
+  document.getElementById('refreshReport').addEventListener('click', renderReport);
+  window.addEventListener('storage', function (event) {
+    if (event.key === 'richersOrders') renderReport();
+  });
+
+  function renderReport() {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    document.getElementById('reportPeriod').textContent =
+      now.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+
+    const orders = JSON.parse(localStorage.getItem('richersOrders') || '[]').filter(function (order) {
+      const createdAt = new Date(order.createdAt);
+      return !Number.isNaN(createdAt.getTime()) && createdAt >= monthStart && createdAt < nextMonth;
+    });
+    const categories = {};
+
+    orders.forEach(function (order) {
+      const categoryKey = order.serviceType || inferCategory(order.service);
+      const category = REPORT_CATEGORIES[categoryKey];
+      if (!category) return;
+
+      if (!categories[categoryKey]) {
+        categories[categoryKey] = {
+          name: category.name,
+          unit: category.unit,
+          orders: 0,
+          volume: 0,
+          estimatedValue: 0,
+          unpricedOrders: 0,
+          volumeUnavailable: false
+        };
+      }
+
+      const row = categories[categoryKey];
+      row.orders += 1;
+      const mainItem = Array.isArray(order.lineItems) && order.lineItems.find(function (item) {
+        return item.unit === category.unit;
+      });
+      if (mainItem && typeof mainItem.quantity === 'number') {
+        row.volume += mainItem.quantity;
+      } else {
+        row.volumeUnavailable = true;
+      }
+      const hasSavedPrice = typeof order.total === 'number' ||
+        (Array.isArray(order.lineItems) && order.lineItems.some(function (item) {
+          return typeof item.total === 'number';
+        }));
+      if (hasSavedPrice) {
+        row.estimatedValue += getOrderTotal(order);
+      } else {
+        row.unpricedOrders += 1;
+      }
+    });
+
+    const rows = Object.keys(categories).map(function (key) {
+      return categories[key];
+    });
+    const grandTotal = rows.reduce(function (sum, row) { return sum + row.estimatedValue; }, 0);
+    const totalOrders = rows.reduce(function (sum, row) { return sum + row.orders; }, 0);
+    const reportRows = document.getElementById('reportRows');
+
+    if (rows.length === 0) {
+      reportRows.innerHTML = '<tr><td colspan="5">No orders were submitted this month.</td></tr>';
+      return;
+    }
+
+    reportRows.innerHTML = rows.map(function (row) {
+      const share = grandTotal > 0 ? (row.estimatedValue / grandTotal * 100).toFixed(1) + '%' : '—';
+      return '<tr>' +
+        '<td class="category-name">' + escapeHtml(row.name) + '</td>' +
+        '<td class="jobs">' + row.orders + '</td>' +
+        '<td class="volume">' + row.volume.toLocaleString() +
+          (row.volumeUnavailable ? ' + some unavailable' : '') + ' ' + escapeHtml(row.unit) + '</td>' +
+        '<td class="revenue">' + (row.unpricedOrders === row.orders
+          ? 'Awaiting quote'
+          : formatCurrency(row.estimatedValue) +
+            (row.unpricedOrders ? ' + ' + row.unpricedOrders + ' awaiting quote' : '')) + '</td>' +
+        '<td class="share">' + share + '</td>' +
+      '</tr>';
+    }).join('') +
+      '<tr class="total-row"><td>TOTAL ESTIMATED VALUE</td><td>' + totalOrders +
+      '</td><td>—</td><td>' + formatCurrency(grandTotal) + '</td><td>' +
+      (grandTotal > 0 ? '100.0%' : '—') + '</td></tr>';
+  }
+
+  function inferCategory(service) {
+    const value = String(service || '').toLowerCase();
+    if (value.includes('document')) return 'doc';
+    if (value.includes('sticker')) return 'sticker';
+    if (value.includes('tarpaulin') || value.includes('large format')) return 'tarp';
+    if (value.includes('booklet')) return 'booklet';
+    return '';
+  }
+
+  function getOrderTotal(order) {
+    if (typeof order.total === 'number') return order.total;
+    if (!Array.isArray(order.lineItems)) return 0;
+    return order.lineItems.reduce(function (sum, item) {
+      return sum + (typeof item.total === 'number' ? item.total : 0);
+    }, 0);
+  }
+
+  function formatCurrency(amount) {
+    return new Intl.NumberFormat('en-PH', {
+      style: 'currency',
+      currency: 'PHP',
+      minimumFractionDigits: 2
+    }).format(amount);
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, function (character) {
+      return {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[character];
+    });
+  }
+  </script>
 </body>
 </html>

@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Richers Printing — My Orders</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="footer.css">
+<style>
+:root {
+  --ink: #0d1b3e;
+  --cyan: #00a8e8;
+  --magenta: #e6007e;
+  --yellow: #ffd400;
+  --blue: #2f6fed;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background:
+    radial-gradient(circle at 100% 0, rgba(0, 168, 232, 0.10) 0 180px, transparent 181px),
+    radial-gradient(circle at 0 420px, rgba(230, 0, 126, 0.07) 0 160px, transparent 161px),
+    #f6f7fb;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  border-bottom: 1px solid #e6e8ee;
+  background: rgba(246, 247, 251, 0.92);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.topbar-brand {
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+}
+
+.topbar-brand span {
+  color: var(--blue);
+}
+
+.topbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  font-size: 13px;
+}
+
+.topbar-nav a {
+  color: #4b5563;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.topbar-nav a:hover {
+  color: var(--ink);
+}
+
+.topbar-user {
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: var(--yellow);
+  color: var(--ink);
+  font-size: 12.5px;
+}
+
+.main {
+  padding: 28px 32px;
+}
+
+.page-banner {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto 26px;
+  padding: 30px 34px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: var(--ink);
+  color: #fff;
+}
+
+.page-banner::before,
+.page-banner::after {
+  position: absolute;
+  border-radius: 50%;
+  background-size: 15px 15px;
+  content: "";
+}
+
+.page-banner::before {
+  top: -40px;
+  right: -40px;
+  width: 240px;
+  height: 240px;
+  background-image: radial-gradient(var(--magenta) 28%, transparent 30%);
+  opacity: 0.85;
+}
+
+.page-banner::after {
+  right: 130px;
+  bottom: -60px;
+  width: 200px;
+  height: 200px;
+  background-image: radial-gradient(var(--cyan) 28%, transparent 30%);
+  opacity: 0.8;
+}
+
+.banner-title {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 6px;
+  font-family: var(--display);
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  line-height: 1.1;
+}
+
+.banner-sub {
+  position: relative;
+  z-index: 1;
+  max-width: 480px;
+  margin: 0;
+  color: #b8c0d6;
+  font-size: 14.5px;
+}
+
+.main {
+  min-height: 60vh;
+}
+
+.orders-section {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.orders-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 0 0 20px;
+}
+
+.section-kicker {
+  margin: 0 0 4px;
+  color: #68718c;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.orders-heading h2 {
+  margin: 0;
+  color: #0d1b3e;
+  font-family: var(--display);
+  font-size: 25px;
+  font-weight: 800;
+}
+
+.new-order-link {
+  display: inline-block;
+  padding: 10px 16px;
+  border: 2px solid #0d1b3e;
+  border-radius: 8px;
+  background: #ffd400;
+  color: #0d1b3e;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.new-order-link:hover {
+  background: #ffe14d;
+}
+
+.orders-list {
+  display: grid;
+  gap: 16px;
+}
+
+.order-card {
+  overflow: hidden;
+  border: 2px solid #0d1b3e;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 5px 5px 0 #00a8e8;
+}
+
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px 22px;
+  border-bottom: 1px solid #dfe3ee;
+}
+
+.order-id {
+  margin: 0 0 3px;
+  color: #0d1b3e;
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.order-date {
+  margin: 0;
+  color: #68718c;
+  font-size: 12px;
+}
+
+.order-status {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: #fff1ba;
+  color: #5d4c00;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.order-status[data-status="Ready for Pickup"],
+.order-status[data-status="Completed"] {
+  background: #d9f2e3;
+  color: #1c7045;
+}
+
+.order-status[data-status="Printing"],
+.order-status[data-status="Quality check"] {
+  background: #e1ebfd;
+  color: #2454a5;
+}
+
+.order-details {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px 24px;
+  padding: 20px 22px;
+}
+
+.order-detail-label {
+  display: block;
+  margin-bottom: 4px;
+  color: #68718c;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.order-detail-value {
+  display: block;
+  overflow-wrap: anywhere;
+  color: #0d1b3e;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.orders-empty {
+  padding: 48px 24px;
+  border: 2px dashed #aab4d0;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.8);
+  text-align: center;
+}
+
+.orders-empty h3 {
+  margin: 0 0 8px;
+  color: #0d1b3e;
+  font-family: var(--display);
+  font-size: 21px;
+}
+
+.orders-empty p {
+  margin: 0 0 18px;
+  color: #68718c;
+  font-size: 14px;
+}
+
+@media (max-width: 720px) {
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px 20px;
+  }
+
+  .topbar-nav {
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .main {
+    padding: 20px;
+  }
+
+  .order-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .orders-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .order-card-header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .order-details {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 16px;
+  }
+}
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <a href="order.html#orderForm" class="topbar-brand">RICHERS <span>PRINTING</span></a>
+    <nav class="topbar-nav" aria-label="Main navigation">
+      <a href="services.html">Services &amp; Pricing</a>
+      <a href="#orders">Track Order</a>
+      <a href="my-orders.html">My Orders</a>
+      <span class="topbar-user" id="userGreeting">Hi, Customer</span>
+      <a href="#" id="logoutLink">Logout</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="page-banner">
+      <h1 class="banner-title">My Orders</h1>
+      <p class="banner-sub">Your print jobs, all in one place. Check each order's current status and pickup details.</p>
+    </section>
+
+    <section class="orders-section" id="orders" aria-labelledby="ordersTitle">
+      <div class="orders-heading">
+        <div>
+          <p class="section-kicker">ORDER HISTORY</p>
+          <h2 id="ordersTitle">Your print jobs</h2>
+        </div>
+        <a class="new-order-link" href="order.html">+ Place an order</a>
+      </div>
+      <div id="ordersList" class="orders-list" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-col">
+        <div class="footer-brand-name">RICHERS <span>PRINTING</span></div>
+        <div class="footer-est">EST. 2026</div>
+        <p class="footer-tagline">Printing, binding and large-format production with verified, trackable orders.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Visit us</h4>
+        <ul>
+          <li>Richers Printing Services</li>
+          <li>Unit 4, Richers Bldg., Shaw Blvd.</li>
+          <li>Pasig City 1600, Metro Manila</li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="tel:+63285550123">(02) 8555 0123</a></li>
+          <li><a href="tel:+639175550123">+63 917 555 0123</a></li>
+          <li><a href="mailto:richersprinting@gmail.com">richersprinting@gmail.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Shop hours</h4>
+        <ul>
+          <li>Mon to Sat: 8:00 AM – 7:00 PM</li>
+          <li>Sunday: 9:00 AM – 3:00 PM</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 Richers Printing Services. All rights reserved.</span>
+      <span>Service Management &amp; Ordering Process System</span>
+    </div>
+  </footer>
+
+  <script>
+  const currentUser = JSON.parse(localStorage.getItem('richersCurrentUser') || 'null');
+
+  if (!currentUser) {
+    window.location.href = 'login.html';
+  } else {
+    const greetingName = currentUser.fullName.trim().split(/\s+/);
+    const lastName = greetingName.pop();
+    const shortName = greetingName.length
+      ? greetingName.join(' ') + ' ' + lastName.charAt(0).toUpperCase() + '.'
+      : lastName;
+    document.getElementById('userGreeting').textContent = 'Hi, ' + shortName + ' (Customer)';
+    renderOrders(currentUser.email);
+    window.addEventListener('storage', function (event) {
+      if (event.key === 'richersOrders') renderOrders(currentUser.email);
+    });
+  }
+
+  document.getElementById('logoutLink').addEventListener('click', function (event) {
+    event.preventDefault();
+    localStorage.removeItem('richersCurrentUser');
+    window.location.href = 'login.html';
+  });
+
+  function renderOrders(email) {
+    const allOrders = JSON.parse(localStorage.getItem('richersOrders') || '[]');
+    const customerOrders = allOrders.filter(function (order) {
+      return order.ownerEmail && order.ownerEmail.toLowerCase() === email.toLowerCase();
+    });
+    const ordersList = document.getElementById('ordersList');
+
+    if (customerOrders.length === 0) {
+      ordersList.innerHTML =
+        '<div class="orders-empty">' +
+          '<h3>No orders yet</h3>' +
+          '<p>Your printing jobs will appear here after you place an order.</p>' +
+          '<a class="new-order-link" href="order.html">Start your first order</a>' +
+        '</div>';
+      return;
+    }
+
+    ordersList.innerHTML = customerOrders.map(function (order) {
+      const created = new Date(order.createdAt);
+      const dateText = Number.isNaN(created.getTime())
+        ? 'Date unavailable'
+        : created.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+      const safeStatus = escapeHtml(order.status || 'Received');
+      return (
+        '<article class="order-card">' +
+          '<div class="order-card-header">' +
+            '<div><h3 class="order-id">' + escapeHtml(order.id) + '</h3>' +
+            '<p class="order-date">Placed ' + escapeHtml(dateText) + '</p></div>' +
+            '<span class="order-status" data-status="' + safeStatus + '">' + safeStatus + '</span>' +
+          '</div>' +
+          '<div class="order-details">' +
+            detail('Service', order.service) +
+            detail('Copies', String(order.copies)) +
+            detail('Pickup target', order.pickup) +
+            detail('Paper', order.paper) +
+            detail('Color', order.color) +
+            detail('Finishing', order.binding) +
+            detail('Uploaded file', order.fileName) +
+            detail('Estimated total', typeof order.total === 'number' ? formatCurrency(order.total) : 'Awaiting quote') +
+            detail('Pricing', order.pricingNote || 'Awaiting shop confirmation') +
+          '</div>' +
+        '</article>'
+      );
+    }).join('');
+  }
+
+  function detail(label, value) {
+    return '<div><span class="order-detail-label">' + escapeHtml(label) +
+      '</span><span class="order-detail-value">' + escapeHtml(value || 'Not provided') + '</span></div>';
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, function (character) {
+      return {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[character];
+    });
+  }
+
+  function formatCurrency(amount) {
+    return new Intl.NumberFormat('en-PH', {
+      style: 'currency',
+      currency: 'PHP',
+      minimumFractionDigits: 2
+    }).format(amount);
+  }
+  </script>
+</body>
+</html>
