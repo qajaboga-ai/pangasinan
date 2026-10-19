@@ -650,6 +650,9 @@ body {
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="supabase-client.js"></script>
   <script>
 // ===== Terms modal controls =====
 const termsModal = document.getElementById('termsModal');
@@ -721,7 +724,7 @@ function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
-form.addEventListener('submit', function (e) {
+form.addEventListener('submit', async function (e) {
   e.preventDefault();
   clearAllErrors();
   successBox.classList.remove('show');
@@ -776,29 +779,32 @@ form.addEventListener('submit', function (e) {
 
   if (!isValid) return;
 
-  // Check for duplicate email in stored accounts
-  const accounts = JSON.parse(localStorage.getItem('richersAccounts') || '[]');
-  const alreadyExists = accounts.some(function (acc) {
-    return acc.email.toLowerCase() === email.toLowerCase();
-  });
+  const submitButton = form.querySelector('[type="submit"]');
+  submitButton.disabled = true;
+  try {
+    const { data, error } = await window.richersDb.client.auth.signUp({
+      email: email,
+      password: password,
+      options: { data: { full_name: fullName, phone: contact } }
+    });
+    if (error) throw error;
 
-  if (alreadyExists) {
-    showError('email', 'An account with this email already exists.');
-    return;
+    if (data.session) {
+      successBox.textContent = 'Account created successfully! Redirecting to your order page...';
+    } else {
+      successBox.textContent = 'Account created. Check your email to confirm it, then log in.';
+    }
+    successBox.classList.add('show');
+    form.reset();
+    if (data.session) {
+      setTimeout(function () { window.location.href = 'order.html'; }, 1500);
+    }
+  } catch (error) {
+    console.error('Account registration failed:', error);
+    showError('email', error.message || 'Account registration failed. Please try again.');
+  } finally {
+    submitButton.disabled = false;
   }
-
-  // Save the new account
-  accounts.push({ fullName: fullName, email: email, contact: contact, password: password });
-  localStorage.setItem('richersAccounts', JSON.stringify(accounts));
-
-  // Show success and redirect to login
-  successBox.textContent = 'Account created successfully! Redirecting to login...';
-  successBox.classList.add('show');
-  form.reset();
-
-  setTimeout(function () {
-    window.location.href = 'login.html';
-  }, 1500);
 });
 
 </script>

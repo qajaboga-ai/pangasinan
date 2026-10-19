@@ -120,20 +120,22 @@
   </div>
 
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="supabase-client.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'richers_inventory_v2';
+document.addEventListener('DOMContentLoaded', async function () {
   const DEFAULT_ITEMS = [
-    { code: 'PAP-A4-80', description: 'A4 Paper 80gsm (500 Sheets/Ream)', category: 'Paper Stock', unit: 'Reams', stock: 50, threshold: 20 },
-    { code: 'PAP-A4-70', description: 'A4 Paper 70gsm Standard', category: 'Paper Stock', unit: 'Reams', stock: 50, threshold: 25 },
-    { code: 'INK-BLK-EP', description: 'Epson Black High-Cap Ink Cartridge', category: 'Ink & Toner', unit: 'Bottles', stock: 50, threshold: 5 },
-    { code: 'BND-RNG-12', description: 'Spiral Ring Binding Coils (12mm)', category: 'Finishing Materials', unit: 'Units', stock: 50, threshold: 100 },
-    { code: 'TAR-VIN-13', description: 'Heavy Duty Vinyl Tarpaulin Roll 13oz', category: 'Large Format Roll', unit: 'Rolls', stock: 50, threshold: 5 }
+    { code: 'PAP-A4-80', description: 'A4 Paper 80gsm (500 Sheets/Ream)', category: 'Paper Stock', unit: 'Reams', quantity: 50, reorder_level: 20 },
+    { code: 'PAP-A4-70', description: 'A4 Paper 70gsm Standard', category: 'Paper Stock', unit: 'Reams', quantity: 50, reorder_level: 25 },
+    { code: 'INK-BLK-EP', description: 'Epson Black High-Cap Ink Cartridge', category: 'Ink & Toner', unit: 'Bottles', quantity: 50, reorder_level: 5 },
+    { code: 'BND-RNG-12', description: 'Spiral Ring Binding Coils (12mm)', category: 'Finishing Materials', unit: 'Units', quantity: 50, reorder_level: 100 },
+    { code: 'TAR-VIN-13', description: 'Heavy Duty Vinyl Tarpaulin Roll 13oz', category: 'Large Format Roll', unit: 'Rolls', quantity: 50, reorder_level: 5 }
   ];
   const rowsElement = document.getElementById('inventoryRows');
   const summaryElement = document.getElementById('inventorySummary');
   const messageElement = document.getElementById('inventoryMessage');
-  let items;
+  let items = [];
 
   function showMessage(message) {
     messageElement.textContent = message;
@@ -145,45 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
     messageElement.hidden = true;
   }
 
-  function isValidItem(item) {
-    return item && typeof item.code === 'string' && typeof item.description === 'string' &&
-      typeof item.category === 'string' && typeof item.unit === 'string' &&
-      Number.isInteger(item.stock) && item.stock >= 0 &&
-      Number.isInteger(item.threshold) && item.threshold >= 0;
-  }
-
-  function readItems() {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw === null) return DEFAULT_ITEMS.map((item) => ({ ...item }));
-
-    let saved;
-    try {
-      saved = JSON.parse(raw);
-    } catch (error) {
-      console.error('Inventory data could not be parsed.', error);
-      showMessage('Saved inventory data is invalid. No changes were made; clear the inventory data or contact support.');
-      return DEFAULT_ITEMS.map((item) => ({ ...item }));
-    }
-
-    if (!Array.isArray(saved) || !saved.every(isValidItem)) {
-      showMessage('Saved inventory data has an unexpected format. No changes were made.');
-      return DEFAULT_ITEMS.map((item) => ({ ...item }));
-    }
-    return saved;
-  }
-
-  function saveItems() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-      clearMessage();
-      return true;
-    } catch (error) {
-      console.error('Inventory data could not be saved.', error);
-      showMessage('Inventory changes could not be saved in this browser. Check available storage and try again.');
-      return false;
-    }
-  }
-
   function makeCell(text, className) {
     const cell = document.createElement('td');
     cell.textContent = text;
@@ -191,16 +154,29 @@ document.addEventListener('DOMContentLoaded', () => {
     return cell;
   }
 
-  function setStock(item, newStock) {
-    if (!Number.isInteger(newStock) || newStock < 0) return;
-    const previousStock = item.stock;
-    item.stock = newStock;
-    if (!saveItems()) {
-      item.stock = previousStock;
-      render();
-      return;
-    }
+  async function reloadItems() {
+    const { data, error } = await window.richersDb.client
+      .from('inventory')
+      .select('id, code, description, category, unit, quantity, reorder_level')
+      .order('id');
+    if (error) throw error;
+    items = data;
     render();
+  }
+
+  async function setStock(item, newStock) {
+    if (!Number.isInteger(newStock) || newStock < 0) return;
+    try {
+      const { error } = await window.richersDb.client
+        .from('inventory')
+        .update({ quantity: newStock, updated_at: new Date().toISOString() })
+        .eq('id', item.id);
+      if (error) throw error;
+      await reloadItems();
+    } catch (error) {
+      console.error('Inventory update failed:', error);
+      showMessage('Inventory change could not be saved. ' + error.message);
+    }
   }
 
   function render() {
@@ -221,25 +197,25 @@ document.addEventListener('DOMContentLoaded', () => {
       decrement.type = 'button';
       decrement.textContent = '−';
       decrement.setAttribute('aria-label', 'Use one ' + item.unit + ' of ' + item.description);
-      decrement.disabled = item.stock === 0;
+      decrement.disabled = item.quantity === 0;
       const stockValue = document.createElement('span');
       stockValue.className = 'stock-value';
-      stockValue.textContent = item.stock + ' ' + item.unit;
+      stockValue.textContent = item.quantity + ' ' + item.unit;
       const increment = document.createElement('button');
       increment.className = 'stock-btn';
       increment.type = 'button';
       increment.textContent = '+';
       increment.setAttribute('aria-label', 'Add one ' + item.unit + ' of ' + item.description);
-      decrement.addEventListener('click', () => setStock(item, item.stock - 1));
-      increment.addEventListener('click', () => setStock(item, item.stock + 1));
+      decrement.addEventListener('click', () => setStock(item, item.quantity - 1));
+      increment.addEventListener('click', () => setStock(item, item.quantity + 1));
       controls.append(decrement, stockValue, increment);
       stockCell.appendChild(controls);
       row.appendChild(stockCell);
-      row.appendChild(makeCell(item.threshold + ' ' + item.unit));
+      row.appendChild(makeCell(item.reorder_level + ' ' + item.unit));
 
       const statusCell = document.createElement('td');
       const badge = document.createElement('span');
-      const isLow = item.stock <= item.threshold;
+      const isLow = item.quantity <= item.reorder_level;
       if (isLow) lowStockCount++;
       badge.className = 'badge ' + (isLow ? 'low-stock' : 'sufficient');
       badge.textContent = isLow ? 'LOW STOCK WARNING' : 'SUFFICIENT';
@@ -252,13 +228,13 @@ document.addEventListener('DOMContentLoaded', () => {
       restock.type = 'button';
       restock.textContent = isLow ? 'Reorder Now' : 'Restock';
       restock.addEventListener('click', () => {
-        const amount = prompt('Enter quantity to add to stock (current: ' + item.stock + ' ' + item.unit + '):', '50');
+        const amount = prompt('Enter quantity to add to stock (current: ' + item.quantity + ' ' + item.unit + '):', '50');
         if (amount === null) return;
         if (!/^\d+$/.test(amount.trim()) || Number(amount) < 1) {
           alert('Enter a whole number greater than zero.');
           return;
         }
-        setStock(item, item.stock + Number(amount));
+        setStock(item, item.quantity + Number(amount));
       });
       actionCell.appendChild(restock);
       row.appendChild(actionCell);
@@ -268,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
     summaryElement.textContent = items.length + ' supply items · ' + lowStockCount + ' at or below reorder threshold';
   }
 
-  document.getElementById('addSupplyButton').addEventListener('click', () => {
+  document.getElementById('addSupplyButton').addEventListener('click', async function () {
     const code = prompt('Enter a unique supply item code:');
     if (code === null) return;
     const normalizedCode = code.trim().toUpperCase();
@@ -311,29 +287,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const newItem = {
       code: normalizedCode,
+      item_name: description.trim(),
       description: description.trim(),
       category: category.trim(),
       unit: unit.trim(),
-      stock: 50,
-      threshold: Number(thresholdInput)
+      quantity: 50,
+      reorder_level: Number(thresholdInput)
     };
-    items.push(newItem);
-    if (!saveItems()) {
-      items.pop();
-      return;
+    try {
+      const { error } = await window.richersDb.client.from('inventory').insert(newItem);
+      if (error) throw error;
+      await reloadItems();
+    } catch (error) {
+      console.error('Could not add inventory item:', error);
+      showMessage('Supply item could not be added. ' + error.message);
     }
-    render();
   });
 
-  items = readItems();
-  if (localStorage.getItem(STORAGE_KEY) === null) saveItems();
-  render();
-
-  window.addEventListener('storage', (event) => {
-    if (event.key !== STORAGE_KEY) return;
-    items = readItems();
-    render();
-  });
+  try {
+    const session = await window.richersDb.requireUser({ admin: true });
+    if (!session) return;
+    await reloadItems();
+    if (items.length === 0) {
+      const { error } = await window.richersDb.client.from('inventory').insert(DEFAULT_ITEMS.map(function (item) {
+        return { ...item, item_name: item.description };
+      }));
+      if (error) throw error;
+      await reloadItems();
+    }
+  } catch (error) {
+    console.error('Could not load inventory:', error);
+    showMessage('Inventory could not be loaded. Check your admin account and database setup. ' + error.message);
+  }
 });
 </script>
 </body>

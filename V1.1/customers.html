@@ -253,65 +253,56 @@ tbody tr:last-child td {
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="supabase-client.js"></script>
   <script>
-  const ACCOUNTS_KEY = 'richersAccounts';
-  const ORDERS_KEY = 'richersOrders';
   const recordsBody = document.getElementById('customerRecords');
   const recordsSummary = document.getElementById('recordsSummary');
 
-  renderCustomerRecords();
+  window.richersDb.requireUser({ admin: true })
+    .then(function (session) { if (session) return renderCustomerRecords(); })
+    .catch(function (error) {
+      console.error('Could not load customer records:', error);
+      const row = document.createElement('tr');
+      const cell = document.createElement('td');
+      cell.colSpan = 7;
+      cell.className = 'records-empty';
+      cell.textContent = 'Could not load customer records. ' + error.message;
+      row.appendChild(cell);
+      recordsBody.replaceChildren(row);
+    });
 
-  window.addEventListener('storage', function (event) {
-    if (event.key === ACCOUNTS_KEY || event.key === ORDERS_KEY) {
-      renderCustomerRecords();
-    }
-  });
-
-  recordsBody.addEventListener('click', function (event) {
+  recordsBody.addEventListener('click', async function (event) {
     const verifyButton = event.target.closest('[data-verify-account]');
     if (!verifyButton) return;
 
-    const accounts = readStoredArray(ACCOUNTS_KEY);
-    const account = accounts.find(function (item) {
-      return item.accountId === verifyButton.dataset.verifyAccount;
-    });
-    if (!account) return;
-
-    account.isVerified = true;
-    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
-    renderCustomerRecords();
+    try {
+      const { error } = await window.richersDb.client
+        .from('profiles')
+        .update({ is_verified: true })
+        .eq('id', verifyButton.dataset.verifyAccount);
+      if (error) throw error;
+      await renderCustomerRecords();
+    } catch (error) {
+      console.error('Could not verify customer:', error);
+      alert('Customer verification was not saved. ' + error.message);
+    }
   });
 
-  function readStoredArray(key) {
-    const value = JSON.parse(localStorage.getItem(key) || '[]');
-    if (!Array.isArray(value)) {
-      throw new Error('Expected ' + key + ' to contain a JSON array.');
-    }
-    return value;
-  }
-
-  function ensureAccountIds(accounts) {
-    let nextId = accounts.reduce(function (largest, account) {
-      const match = /^USR-(\d+)$/.exec(account.accountId || '');
-      return match ? Math.max(largest, Number(match[1])) : largest;
-    }, 0) + 1;
-    let changed = false;
-
-    accounts.forEach(function (account) {
-      if (!account.accountId) {
-        account.accountId = 'USR-' + String(nextId).padStart(4, '0');
-        nextId += 1;
-        changed = true;
-      }
-    });
-
-    if (changed) localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
-  }
-
-  function renderCustomerRecords() {
-    const accounts = readStoredArray(ACCOUNTS_KEY);
-    const orders = readStoredArray(ORDERS_KEY);
-    ensureAccountIds(accounts);
+  async function renderCustomerRecords() {
+    const [profilesResult, ordersResult] = await Promise.all([
+      window.richersDb.client
+        .from('profiles')
+        .select('id, full_name, email, phone, is_verified, created_at')
+        .eq('role', 'customer')
+        .order('created_at', { ascending: false }),
+      window.richersDb.client.from('orders').select('customer_id')
+    ]);
+    if (profilesResult.error) throw profilesResult.error;
+    if (ordersResult.error) throw ordersResult.error;
+    const accounts = profilesResult.data;
+    const orders = ordersResult.data;
 
     recordsSummary.textContent = accounts.length + ' registered ' +
       (accounts.length === 1 ? 'account' : 'accounts');
@@ -330,21 +321,21 @@ tbody tr:last-child td {
 
     accounts.forEach(function (account) {
       const orderCount = orders.filter(function (order) {
-        return order.ownerEmail && account.email &&
-          order.ownerEmail.toLowerCase() === account.email.toLowerCase();
+        return order.customer_id === account.id;
       }).length;
+      const accountId = 'USR-' + account.id.slice(0, 8).toUpperCase();
       const row = document.createElement('tr');
 
-      row.appendChild(createCell(account.accountId, 'account-id'));
-      row.appendChild(createCell(account.fullName || 'Name not provided', 'user-name'));
+      row.appendChild(createCell(accountId, 'account-id'));
+      row.appendChild(createCell(account.full_name || 'Name not provided', 'user-name'));
       row.appendChild(createCell(
-        [account.contact, account.email].filter(Boolean).join(' / ') || 'Contact not provided',
+        [account.phone, account.email].filter(Boolean).join(' / ') || 'Contact not provided',
         'contact'
       ));
       row.appendChild(createPillCell('CUSTOMER', 'role-pill role-customer'));
       row.appendChild(createCell(orderCount + (orderCount === 1 ? ' Order' : ' Orders'), 'orders'));
 
-      if (account.isVerified) {
+      if (account.is_verified) {
         row.appendChild(createPillCell('VERIFIED IDENTITY', 'status-pill status-verified'));
         row.appendChild(createCell('Verified', ''));
       } else {
@@ -353,7 +344,7 @@ tbody tr:last-child td {
         const verifyButton = document.createElement('button');
         verifyButton.type = 'button';
         verifyButton.className = 'action-link account-action';
-        verifyButton.dataset.verifyAccount = account.accountId;
+        verifyButton.dataset.verifyAccount = account.id;
         verifyButton.textContent = 'Verify Account';
         actionCell.appendChild(verifyButton);
         row.appendChild(actionCell);

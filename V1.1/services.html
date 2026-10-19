@@ -71,6 +71,16 @@
       color: var(--blue);
     }
 
+    .topbar-user {
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: var(--yellow);
+      color: var(--ink);
+      font-size: 12.5px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
     .page {
       width: min(1120px, calc(100% - 40px));
       margin: 34px auto 64px;
@@ -173,6 +183,11 @@
       color: #68718c;
       font-size: 14px;
       line-height: 1.6;
+    }
+
+    .services-status {
+      margin-top: 10px !important;
+      font-size: 13px !important;
     }
 
     .service-grid {
@@ -307,6 +322,7 @@
       .topbar-nav {
         flex-wrap: wrap;
         gap: 12px 18px;
+        justify-content: flex-start;
       }
 
       .service-grid,
@@ -323,11 +339,14 @@
 </head>
 <body>
   <header class="topbar">
-    <a href="services.html" class="topbar-brand">RICHERS <span>PRINTING</span></a>
+    <a href="landing.html" class="topbar-brand">RICHERS <span>PRINTING</span></a>
     <nav class="topbar-nav" aria-label="Main navigation">
-      <a href="#services">Services &amp; Pricing</a>
       <a href="order.html#orderForm">Place an Order</a>
       <a href="my-orders.html#orders">Track Order</a>
+      <span class="topbar-user" id="userGreeting" hidden></span>
+      <a href="login.html" id="loginLink">Login</a>
+      <a href="signup.html" id="signupLink">Create account</a>
+      <a href="login.html" id="logoutLink" hidden>Logout</a>
     </nav>
   </header>
 
@@ -349,9 +368,10 @@
       <div class="section-heading">
         <h2 id="servicesHeading">Services &amp; sample rates</h2>
         <p>Rates below are estimates in Philippine pesos and may change after the shop reviews your file and requirements.</p>
+        <p id="servicesStatus" class="services-status" role="status" aria-live="polite" hidden></p>
       </div>
 
-      <div class="service-grid">
+      <div class="service-grid" id="serviceGrid">
         <article class="service-card">
           <h3>Document Printing</h3>
           <p>Print reports, handouts, forms, and other documents. Select A4 or Letter paper, paper weight, and color option when ordering.</p>
@@ -453,5 +473,132 @@
       <span>Service Management &amp; Ordering Process System</span>
     </div>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="supabase-client.js"></script>
+  <script>
+    (async function () {
+      const grid = document.getElementById('serviceGrid');
+      const status = document.getElementById('servicesStatus');
+      const config = window.SUPABASE_CONFIG;
+
+      function showStatus(message) {
+        status.textContent = message;
+        status.hidden = false;
+      }
+
+      if (!config || !config.url || !config.publishableKey) {
+        showStatus('Online prices are not configured; the displayed rates are sample estimates.');
+        console.error('Supabase configuration is missing. Check supabase-config.js.');
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          config.url.replace(/\/+$/, '') + '/rest/v1/services?select=name,description,category,unit,unit_price&active=eq.true&order=category.asc,name.asc',
+          {
+            headers: {
+              apikey: config.publishableKey,
+              Authorization: 'Bearer ' + config.publishableKey
+            }
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Supabase returned HTTP ' + response.status + '.');
+        }
+
+        const services = await response.json();
+        if (!Array.isArray(services)) {
+          throw new Error('Supabase returned an unexpected services response.');
+        }
+
+        if (services.length === 0) {
+          grid.replaceChildren();
+          showStatus('No active services are listed in the online database yet.');
+          return;
+        }
+
+        const categories = new Map();
+        services.forEach(function (service) {
+          const categoryName = service.category || 'Other Services';
+          if (!categories.has(categoryName)) categories.set(categoryName, []);
+          categories.get(categoryName).push(service);
+        });
+
+        const cards = document.createDocumentFragment();
+        categories.forEach(function (items, categoryName) {
+          const card = document.createElement('article');
+          card.className = 'service-card';
+
+          const heading = document.createElement('h3');
+          heading.textContent = categoryName;
+          card.appendChild(heading);
+
+          const description = document.createElement('p');
+          description.textContent = [...new Set(items.map(function (item) {
+            return item.description;
+          }).filter(Boolean))].join(' ');
+          card.appendChild(description);
+
+          const priceList = document.createElement('ul');
+          priceList.className = 'price-list';
+          items.forEach(function (item) {
+            const row = document.createElement('li');
+            const name = document.createElement('span');
+            name.textContent = item.name;
+            const price = document.createElement('strong');
+            price.textContent = '₱' + Number(item.unit_price).toFixed(2) + ' / ' + item.unit;
+            row.append(name, price);
+            priceList.appendChild(row);
+          });
+          card.appendChild(priceList);
+          cards.appendChild(card);
+        });
+
+        grid.replaceChildren(cards);
+        showStatus('Prices loaded from the online services list.');
+      } catch (error) {
+        console.error('Could not load services from Supabase:', error);
+        showStatus('Could not load online prices. Showing sample estimates instead.');
+      }
+    })();
+
+    (function () {
+      const greeting = document.getElementById('userGreeting');
+      const loginLink = document.getElementById('loginLink');
+      const signupLink = document.getElementById('signupLink');
+      const logoutLink = document.getElementById('logoutLink');
+      window.richersDb.client.auth.getSession().then(async function ({ data, error }) {
+        if (error) throw error;
+        if (!data.session) return;
+        const profile = await window.richersDb.getProfile(data.session.user);
+        const nameParts = profile.full_name.trim().split(/\s+/);
+        const shortName = nameParts.length > 1
+          ? nameParts.slice(0, -1).join(' ') + ' ' + nameParts[nameParts.length - 1].charAt(0).toUpperCase() + '.'
+          : nameParts[0];
+        greeting.textContent = 'Hi, ' + shortName + ' (' + (profile.role === 'admin' ? 'Admin' : 'Customer') + ')';
+        greeting.hidden = false;
+        loginLink.hidden = true;
+        signupLink.hidden = true;
+        logoutLink.hidden = false;
+      }).catch(function (error) {
+        console.error('Could not load signed-in account details:', error);
+      });
+
+      logoutLink.addEventListener('click', async function (event) {
+        event.preventDefault();
+        if (!window.confirm('Are you sure you want to log out?')) return;
+        try {
+          const { error } = await window.richersDb.client.auth.signOut();
+          if (error) throw error;
+          window.location.href = 'login.html';
+        } catch (error) {
+          console.error('Logout failed:', error);
+          alert('Logout failed. Please try again.');
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

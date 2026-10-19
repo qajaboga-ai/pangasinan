@@ -767,13 +767,27 @@ body {
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="supabase-client.js"></script>
   <script>
 // ===== Auth guard: only logged-in users can view this page =====
-const currentUser = JSON.parse(localStorage.getItem('richersCurrentUser') || 'null');
-
-if (!currentUser) {
+let currentUser = null;
+const userReady = window.richersDb.requireUser().then(function (session) {
+  if (!session) return null;
+  currentUser = {
+    id: session.user.id,
+    email: session.user.email,
+    fullName: session.profile.full_name,
+    contact: session.profile.phone || ''
+  };
+  return currentUser;
+}).catch(function (error) {
+  console.error('Could not verify the customer session:', error);
+  alert('Your account could not be verified. Please log in again.');
   window.location.href = 'login.html';
-}
+  return null;
+});
 
 // ===== Greeting =====
 function formatGreetingName(fullName) {
@@ -783,17 +797,24 @@ function formatGreetingName(fullName) {
   return parts.join(' ') + ' ' + last.charAt(0).toUpperCase() + '.';
 }
 
-if (currentUser) {
-  const shortName = formatGreetingName(currentUser.fullName);
+userReady.then(function (user) {
+  if (!user) return;
+  const shortName = formatGreetingName(user.fullName);
   document.getElementById('userGreeting').textContent = 'Hi, ' + shortName + ' (Customer)';
   document.getElementById('noteName').textContent = shortName;
-}
+});
 
 // ===== Logout =====
 document.getElementById('logoutLink').addEventListener('click', function (e) {
   e.preventDefault();
-  localStorage.removeItem('richersCurrentUser');
-  window.location.href = 'login.html';
+  if (!window.confirm('Are you sure you want to log out?')) return;
+  window.richersDb.client.auth.signOut().then(function ({ error }) {
+    if (error) throw error;
+    window.location.href = 'login.html';
+  }).catch(function (error) {
+    console.error('Logout failed:', error);
+    alert('Logout failed. Please try again.');
+  });
 });
 
 // ===== File upload mock =====
@@ -810,6 +831,29 @@ const itemQuantityLabel = document.getElementById('itemQuantityLabel');
 const orderEstimate = document.getElementById('orderEstimate');
 const submitOrderEstimate = document.getElementById('submitOrderEstimate');
 const orderBreakdown = document.getElementById('orderBreakdown');
+let onlineServicePrices = new Map();
+
+const servicePriceReady = window.richersDb.client
+  .from('services')
+  .select('id, name, unit_price')
+  .eq('active', true)
+  .then(function ({ data, error }) {
+    if (error) throw error;
+    onlineServicePrices = new Map(data.map(function (service) {
+      return [service.name, service];
+    }));
+    updateEstimate();
+  })
+  .catch(function (error) {
+    console.error('Could not load online service prices:', error);
+    document.querySelector('.price-guide').textContent =
+      'Could not load online prices. The displayed breakdown uses sample estimates; confirm pricing with the shop.';
+  });
+
+function getServicePrice(name, samplePrice) {
+  const service = onlineServicePrices.get(name);
+  return service ? Number(service.unit_price) : samplePrice;
+}
 
 const SAMPLE_PRICES = {
   documentColorPage: 5,
@@ -837,23 +881,27 @@ function buildLineItems() {
   if (service === 'doc') {
     description = 'Document printing (' + colorOption.selectedOptions[0].textContent + ', ' +
       paperType.selectedOptions[0].textContent + ')';
-    unitPrice = colorOption.value === 'color' ? SAMPLE_PRICES.documentColorPage : SAMPLE_PRICES.documentBwPage;
+    unitPrice = colorOption.value === 'color'
+      ? getServicePrice('Document Printing - Full Color', SAMPLE_PRICES.documentColorPage)
+      : getServicePrice('Document Printing - Black & White', SAMPLE_PRICES.documentBwPage);
     quantity = copies * unitsPerCopy;
     unit = 'pages';
   } else if (service === 'sticker') {
     description = 'Sticker & label printing (A3 glossy sheet)';
-    unitPrice = SAMPLE_PRICES.stickerSheet;
+    unitPrice = getServicePrice('Sticker & Label Printing', SAMPLE_PRICES.stickerSheet);
     quantity = copies * unitsPerCopy;
     unit = 'sheets';
   } else if (service === 'tarp') {
     description = 'Standard 3×5 ft tarpaulin';
-    unitPrice = SAMPLE_PRICES.tarpPiece;
+    unitPrice = getServicePrice('Large-Format Tarpaulin', SAMPLE_PRICES.tarpPiece);
     quantity = copies;
     unit = 'pieces';
   } else {
     description = 'Booklet printing (' + colorOption.selectedOptions[0].textContent + ', ' +
       paperType.selectedOptions[0].textContent + ')';
-    unitPrice = colorOption.value === 'color' ? SAMPLE_PRICES.bookletColorPage : SAMPLE_PRICES.bookletBwPage;
+    unitPrice = colorOption.value === 'color'
+      ? getServicePrice('Booklet - Full Color', SAMPLE_PRICES.bookletColorPage)
+      : getServicePrice('Booklet - Black & White', SAMPLE_PRICES.bookletBwPage);
     quantity = copies * unitsPerCopy;
     unit = 'pages';
   }
@@ -868,8 +916,8 @@ function buildLineItems() {
 
   if (service === 'doc' || service === 'booklet') {
     let finishingPrice = 0;
-    if (bindingOption.value === 'ring') finishingPrice = SAMPLE_PRICES.ringBindingCopy;
-    if (bindingOption.value === 'staple') finishingPrice = SAMPLE_PRICES.stapleBindingCopy;
+    if (bindingOption.value === 'ring') finishingPrice = getServicePrice('Ring Binding', SAMPLE_PRICES.ringBindingCopy);
+    if (bindingOption.value === 'staple') finishingPrice = getServicePrice('Staple Binding', SAMPLE_PRICES.stapleBindingCopy);
     if (finishingPrice > 0) {
       lineItems.push({
         description: bindingOption.selectedOptions[0].textContent,
@@ -950,7 +998,7 @@ fileInput.addEventListener('change', function () {
   if (fileInput.files.length > 0) {
     const file = fileInput.files[0];
     const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
-    uploadConfirm.textContent = '✓ ' + file.name + ' (' + sizeMB + 'MB) Uploaded';
+    uploadConfirm.textContent = '✓ ' + file.name + ' (' + sizeMB + 'MB) Selected; uploads when you submit.';
     uploadConfirm.classList.add('show');
   } else {
     uploadConfirm.classList.remove('show');
@@ -970,49 +1018,93 @@ function getMissing() {
   if (!quantity || quantity < 1) missing.push('page or sheet quantity');
   if (!document.getElementById('pickupInput').value.trim()) missing.push('pickup date');
   if (fileInput.files.length === 0) missing.push('your file');
+  else if (fileInput.files[0].size > 50 * 1024 * 1024) missing.push('a file smaller than 50MB');
   return missing;
 }
 
 // ===== Submit order =====
-document.getElementById('orderForm').addEventListener('submit', function (e) {
+document.getElementById('orderForm').addEventListener('submit', async function (e) {
   e.preventDefault();
+  const user = await userReady;
+  if (!user) return;
+  await servicePriceReady;
   const missing = getMissing();
   if (missing.length > 0) {
     alert('Please complete the form first. Still needed: ' + missing.join(', ') + '.');
     return;
   }
 
-  const orders = JSON.parse(localStorage.getItem('richersOrders') || '[]');
-  const timestamp = Date.now();
-  let orderId = 'RPS-' + String(timestamp).slice(-6);
-  while (orders.some(function (order) { return order.id === orderId; })) {
-    orderId = 'RPS-' + String(Number(orderId.slice(4)) + 1).padStart(6, '0');
-  }
-
-  const order = {
-    id: orderId,
-    ownerEmail: currentUser.email,
-    customerName: currentUser.fullName,
-    customerContact: currentUser.contact || '',
-    serviceType: serviceType.value,
+  const lineItems = buildLineItems();
+  const payload = {
+    customer_id: user.id,
+    service_type: serviceType.value,
     service: document.getElementById('serviceType').selectedOptions[0].textContent,
     paper: document.getElementById('paperType').selectedOptions[0].textContent,
     color: document.getElementById('colorOption').selectedOptions[0].textContent,
     binding: document.getElementById('bindingOption').selectedOptions[0].textContent,
-    copies: parseInt(document.getElementById('copiesInput').value, 10),
-    itemQuantity: parseInt(itemQuantity.value, 10),
-    pickup: document.getElementById('pickupInput').value.trim(),
-    fileName: fileInput.files[0].name,
-    lineItems: buildLineItems(),
-    pricingNote: 'Sample estimate; confirm final pricing with the shop.',
-    status: 'Received',
-    createdAt: new Date().toISOString()
+    copies: Number.parseInt(document.getElementById('copiesInput').value, 10),
+    item_quantity: Number.parseInt(itemQuantity.value, 10),
+    pickup_date: document.getElementById('pickupInput').value.trim(),
+    file_name: fileInput.files[0].name,
+    file_path: null,
+    total: lineItems.reduce(function (sum, item) { return sum + item.total; }, 0),
+    pricing_note: 'Sample estimate; confirm final pricing with the shop.'
   };
-  order.total = order.lineItems.reduce(function (sum, item) { return sum + item.total; }, 0);
-  orders.unshift(order);
-  localStorage.setItem('richersOrders', JSON.stringify(orders));
 
-  alert('Printing order submitted successfully! You can track its progress under "My Orders".');
+  let uploadedFilePath = null;
+  let orderCreated = false;
+  try {
+    const file = fileInput.files[0];
+    const safeFileName = file.name.replace(/[^\w.-]+/g, '_');
+    uploadedFilePath = user.id + '/' + Date.now() + '-' +
+      Math.random().toString(36).slice(2) + '/' + safeFileName;
+    const { error: uploadError } = await window.richersDb.client.storage
+      .from('order-files')
+      .upload(uploadedFilePath, file, { upsert: false });
+    if (uploadError) throw uploadError;
+    payload.file_path = uploadedFilePath;
+
+    const { data: order, error: orderError } = await window.richersDb.client
+      .from('orders')
+      .insert(payload)
+      .select('id')
+      .single();
+    if (orderError) throw orderError;
+    orderCreated = true;
+
+    const orderItems = lineItems.map(function (item) {
+      const matchedService = Array.from(onlineServicePrices.values()).find(function (service) {
+        return service.name === item.description ||
+          item.description.indexOf(service.name.replace(/^Document Printing - |^Booklet - /, '')) !== -1;
+      });
+      return {
+        order_id: order.id,
+        service_id: matchedService ? matchedService.id : null,
+        service_name: item.description,
+        description: item.description,
+        quantity: item.quantity,
+        unit_price: item.unitPrice
+      };
+    });
+    const { error: itemError } = await window.richersDb.client.from('order_items').insert(orderItems);
+    if (itemError) {
+      console.error('Order was saved, but its item breakdown was not:', itemError);
+      alert('Your order was created, but its item breakdown could not be saved. Contact the shop and provide order number RPS-' + String(order.id).padStart(6, '0') + '.');
+      return;
+    }
+
+    alert('Printing order submitted successfully! Order number: RPS-' +
+      String(order.id).padStart(6, '0') + '. You can track it under Track Order.');
+  } catch (error) {
+    console.error('Order submission failed:', error);
+    if (uploadedFilePath && !orderCreated) {
+      const { error: cleanupError } = await window.richersDb.client.storage
+        .from('order-files')
+        .remove([uploadedFilePath]);
+      if (cleanupError) console.error('Could not remove the unlinked order file:', cleanupError);
+    }
+    alert('Your order could not be submitted. ' + (error.message || 'Please try again.'));
+  }
 });
 </script>
 </body>

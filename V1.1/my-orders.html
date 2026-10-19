@@ -411,36 +411,46 @@ body {
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="supabase-client.js"></script>
   <script>
-  const currentUser = JSON.parse(localStorage.getItem('richersCurrentUser') || 'null');
-
-  if (!currentUser) {
-    window.location.href = 'login.html';
-  } else {
-    const greetingName = currentUser.fullName.trim().split(/\s+/);
-    const lastName = greetingName.pop();
-    const shortName = greetingName.length
-      ? greetingName.join(' ') + ' ' + lastName.charAt(0).toUpperCase() + '.'
+  const ordersList = document.getElementById('ordersList');
+  const sessionReady = window.richersDb.requireUser().then(async function (session) {
+    if (!session) return null;
+    const nameParts = session.profile.full_name.trim().split(/\s+/);
+    const lastName = nameParts.pop();
+    const shortName = nameParts.length
+      ? nameParts.join(' ') + ' ' + lastName.charAt(0).toUpperCase() + '.'
       : lastName;
     document.getElementById('userGreeting').textContent = 'Hi, ' + shortName + ' (Customer)';
-    renderOrders(currentUser.email);
-    window.addEventListener('storage', function (event) {
-      if (event.key === 'richersOrders') renderOrders(currentUser.email);
-    });
-  }
+    await renderOrders(session.user.id);
+    return session;
+  }).catch(function (error) {
+    console.error('Could not load customer orders:', error);
+    ordersList.textContent = 'Orders could not be loaded. Please refresh the page or try again later.';
+    return null;
+  });
 
   document.getElementById('logoutLink').addEventListener('click', function (event) {
     event.preventDefault();
-    localStorage.removeItem('richersCurrentUser');
-    window.location.href = 'login.html';
+    if (!window.confirm('Are you sure you want to log out?')) return;
+    window.richersDb.client.auth.signOut().then(function ({ error }) {
+      if (error) throw error;
+      window.location.href = 'login.html';
+    }).catch(function (error) {
+      console.error('Logout failed:', error);
+      alert('Logout failed. Please try again.');
+    });
   });
 
-  function renderOrders(email) {
-    const allOrders = JSON.parse(localStorage.getItem('richersOrders') || '[]');
-    const customerOrders = allOrders.filter(function (order) {
-      return order.ownerEmail && order.ownerEmail.toLowerCase() === email.toLowerCase();
-    });
-    const ordersList = document.getElementById('ordersList');
+  async function renderOrders(customerId) {
+    const { data: customerOrders, error } = await window.richersDb.client
+      .from('orders')
+      .select('*')
+      .eq('customer_id', customerId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
 
     if (customerOrders.length === 0) {
       ordersList.innerHTML =
@@ -452,29 +462,45 @@ body {
       return;
     }
 
+    const { data: orderItems, error: itemsError } = await window.richersDb.client
+      .from('order_items')
+      .select('order_id, service_name, quantity, unit_price')
+      .in('order_id', customerOrders.map(function (order) { return order.id; }));
+    if (itemsError) throw itemsError;
+    const itemsByOrder = new Map();
+    orderItems.forEach(function (item) {
+      if (!itemsByOrder.has(item.order_id)) itemsByOrder.set(item.order_id, []);
+      itemsByOrder.get(item.order_id).push(item);
+    });
+
     ordersList.innerHTML = customerOrders.map(function (order) {
-      const created = new Date(order.createdAt);
+      const created = new Date(order.created_at);
       const dateText = Number.isNaN(created.getTime())
         ? 'Date unavailable'
         : created.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
       const safeStatus = escapeHtml(order.status || 'Received');
+      const displayOrderId = 'RPS-' + String(order.id).padStart(6, '0');
+      const lineItems = itemsByOrder.get(order.id) || [];
       return (
         '<article class="order-card">' +
           '<div class="order-card-header">' +
-            '<div><h3 class="order-id">' + escapeHtml(order.id) + '</h3>' +
+            '<div><h3 class="order-id">' + escapeHtml(displayOrderId) + '</h3>' +
             '<p class="order-date">Placed ' + escapeHtml(dateText) + '</p></div>' +
             '<span class="order-status" data-status="' + safeStatus + '">' + safeStatus + '</span>' +
           '</div>' +
           '<div class="order-details">' +
             detail('Service', order.service) +
+            detail('Items', lineItems.map(function (item) {
+              return item.service_name + ' (' + item.quantity + ' × ' + formatCurrency(Number(item.unit_price)) + ')';
+            }).join('; ')) +
             detail('Copies', String(order.copies)) +
-            detail('Pickup target', order.pickup) +
+            detail('Pickup target', order.pickup_date) +
             detail('Paper', order.paper) +
             detail('Color', order.color) +
             detail('Finishing', order.binding) +
-            detail('Uploaded file', order.fileName) +
-            detail('Estimated total', typeof order.total === 'number' ? formatCurrency(order.total) : 'Awaiting quote') +
-            detail('Pricing', order.pricingNote || 'Awaiting shop confirmation') +
+            detail('Uploaded file', order.file_name) +
+            detail('Estimated total', Number.isFinite(Number(order.total)) ? formatCurrency(Number(order.total)) : 'Awaiting quote') +
+            detail('Pricing', order.pricing_note || 'Awaiting shop confirmation') +
           '</div>' +
         '</article>'
       );

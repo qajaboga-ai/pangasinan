@@ -55,6 +55,9 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="supabase-client.js"></script>
   <script>
   const REPORT_CATEGORIES = {
     doc: { name: 'Document Printing (A4/Letter)', unit: 'pages' },
@@ -63,20 +66,55 @@
     booklet: { name: 'Booklet Binding & Finishing', unit: 'pages' }
   };
 
-  renderReport();
-  document.getElementById('refreshReport').addEventListener('click', renderReport);
-  window.addEventListener('storage', function (event) {
-    if (event.key === 'richersOrders') renderReport();
+  window.richersDb.requireUser({ admin: true })
+    .then(function (session) { if (session) return renderReport(); })
+    .catch(function (error) {
+      console.error('Could not load report:', error);
+      document.getElementById('reportRows').innerHTML =
+        '<tr><td colspan="5">Could not verify admin access or load report data.</td></tr>';
+    });
+  document.getElementById('refreshReport').addEventListener('click', function () {
+    renderReport().catch(function (error) {
+      console.error('Could not refresh report:', error);
+      document.getElementById('reportRows').innerHTML =
+        '<tr><td colspan="5">Report refresh failed. ' + escapeHtml(error.message) + '</td></tr>';
+    });
   });
 
-  function renderReport() {
+  async function renderReport() {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     document.getElementById('reportPeriod').textContent =
       now.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
 
-    const orders = JSON.parse(localStorage.getItem('richersOrders') || '[]').filter(function (order) {
+    const [orderResult, itemResult] = await Promise.all([
+      window.richersDb.client.from('orders').select('*'),
+      window.richersDb.client.from('order_items').select('order_id, service_name, quantity, unit_price')
+    ]);
+    if (orderResult.error) throw orderResult.error;
+    if (itemResult.error) throw itemResult.error;
+    const itemsByOrder = new Map();
+    itemResult.data.forEach(function (item) {
+      if (!itemsByOrder.has(item.order_id)) itemsByOrder.set(item.order_id, []);
+      const order = orderResult.data.find(function (candidate) { return candidate.id === item.order_id; });
+      const units = order && order.service_type === 'tarp' ? 'pieces'
+        : order && order.service_type === 'sticker' ? 'sheets' : 'pages';
+      itemsByOrder.get(item.order_id).push({
+        unit: units,
+        quantity: Number(item.quantity),
+        total: Number(item.quantity) * Number(item.unit_price)
+      });
+    });
+    const orders = orderResult.data.map(function (order) {
+      return {
+        ...order,
+        createdAt: order.created_at,
+        serviceType: order.service_type,
+        total: Number(order.total),
+        lineItems: itemsByOrder.get(order.id) || []
+      };
+    }).filter(function (order) {
       const createdAt = new Date(order.createdAt);
       return !Number.isNaN(createdAt.getTime()) && createdAt >= monthStart && createdAt < nextMonth;
     });

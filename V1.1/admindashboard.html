@@ -75,8 +75,8 @@
       </div>
       <div class="stat-card">
         <div class="stat-label">Low Stock Alerts</div>
-        <div class="stat-value red">2 Items</div>
-        <div class="stat-foot red">A4 70gsm Paper, Black Ink</div>
+        <div class="stat-value red" id="lowStockCount">0 Items</div>
+        <div class="stat-foot red" id="lowStockSummary">Inventory status</div>
       </div>
     </div>
 
@@ -100,8 +100,10 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="supabase-client.js"></script>
   <script>
-  const ORDER_STORAGE_KEY = 'richersOrders';
   const ORDER_STATUSES = [
     'Received',
     'File Verified',
@@ -114,50 +116,75 @@
   document.getElementById('dashboardDate').textContent =
     new Date().toLocaleDateString(undefined, { dateStyle: 'full' }) + ' — Pasig Main Branch';
 
-  renderDashboardOrders();
-  window.addEventListener('storage', function (event) {
-    if (event.key === ORDER_STORAGE_KEY) renderDashboardOrders();
+  let orders = [];
+  let profiles = [];
+  let payments = [];
+  let inventory = [];
+  window.richersDb.requireUser({ admin: true }).then(function (session) {
+    if (session) return renderDashboardOrders();
+  }).catch(function (error) {
+    console.error('Admin access check failed:', error);
+    document.getElementById('orderPipeline').innerHTML =
+      '<tr><td colspan="6">Could not verify admin access. Please log in again.</td></tr>';
   });
 
-  document.getElementById('orderPipeline').addEventListener('change', function (event) {
+  document.getElementById('orderPipeline').addEventListener('change', async function (event) {
     const statusSelect = event.target.closest('[data-order-status]');
     if (!statusSelect) return;
 
-    const orders = readOrders();
-    const order = orders.find(function (item) {
-      return item.id === statusSelect.dataset.orderStatus;
-    });
-    if (!order) return;
-
-    order.status = statusSelect.value;
-    localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(orders));
-    renderDashboardOrders();
+    try {
+      const { error } = await window.richersDb.client
+        .from('orders')
+        .update({ status: statusSelect.value })
+        .eq('id', Number(statusSelect.dataset.orderStatus));
+      if (error) throw error;
+      await renderDashboardOrders();
+    } catch (error) {
+      console.error('Could not update order status:', error);
+      alert('Order status was not saved. ' + error.message);
+    }
   });
 
-  function readOrders() {
-    const rawOrders = JSON.parse(localStorage.getItem(ORDER_STORAGE_KEY) || '[]');
-    const accounts = JSON.parse(localStorage.getItem('richersAccounts') || '[]');
-
-    return rawOrders.map(function (order) {
-      const account = accounts.find(function (item) {
-        return order.ownerEmail && item.email.toLowerCase() === order.ownerEmail.toLowerCase();
-      });
+  async function renderDashboardOrders() {
+    const [orderResult, profileResult, paymentResult, inventoryResult] = await Promise.all([
+      window.richersDb.client.from('orders').select('*').order('created_at', { ascending: false }),
+      window.richersDb.client.from('profiles').select('id, full_name, email, phone, is_verified'),
+      window.richersDb.client.from('payments').select('amount, created_at'),
+      window.richersDb.client.from('inventory').select('description, quantity, reorder_level')
+    ]);
+    if (orderResult.error) throw orderResult.error;
+    if (profileResult.error) throw profileResult.error;
+    if (paymentResult.error) throw paymentResult.error;
+    if (inventoryResult.error) throw inventoryResult.error;
+    profiles = profileResult.data;
+    payments = paymentResult.data;
+    inventory = inventoryResult.data;
+    const lowStockItems = inventory.filter(function (item) {
+      return item.quantity <= item.reorder_level;
+    });
+    document.getElementById('lowStockCount').textContent = lowStockItems.length + ' Items';
+    document.getElementById('lowStockSummary').textContent = lowStockItems.length
+      ? lowStockItems.map(function (item) { return item.description; }).join(', ')
+      : 'All supplies meet reorder levels';
+    orders = orderResult.data.map(function (order) {
+      const profile = profiles.find(function (item) { return item.id === order.customer_id; });
       return {
         ...order,
-        customerName: order.customerName || (account && account.fullName) || order.ownerEmail || 'Unknown customer',
-        customerContact: order.customerContact || (account && account.contact) || ''
+        customerName: profile ? profile.full_name : 'Unknown customer',
+        customerContact: profile ? profile.phone : '',
+        ownerEmail: profile ? profile.email : '',
+        displayId: 'RPS-' + String(order.id).padStart(6, '0'),
+        createdAt: order.created_at,
+        fileName: order.file_name,
+        pickup: order.pickup_date
       };
     });
-  }
-
-  function renderDashboardOrders() {
-    const orders = readOrders();
     const completed = orders.filter(function (order) {
       return order.status === 'Completed';
     });
     const today = new Date().toDateString();
-    const paidToday = orders.filter(function (order) {
-      return order.paid && order.paidAt && new Date(order.paidAt).toDateString() === today;
+    const paidToday = payments.filter(function (payment) {
+      return new Date(payment.created_at).toDateString() === today;
     });
     const active = orders.filter(function (order) {
       return order.status !== 'Completed';
@@ -171,8 +198,8 @@
       pendingCount + ' pending • ' + (active.length - pendingCount) + ' in production';
     document.getElementById('completedOrdersCount').textContent = completed.length + ' Jobs';
     document.getElementById('todayRevenue').textContent = formatCurrency(
-      paidToday.reduce(function (sum, order) {
-        return sum + getOrderTotal(order);
+      paidToday.reduce(function (sum, payment) {
+        return sum + Number(payment.amount);
       }, 0)
     );
     document.getElementById('todayRevenueNote').textContent =
@@ -199,7 +226,7 @@
       }).join('');
 
       return '<tr>' +
-        '<td class="order-id">#' + escapeHtml(order.id) + '</td>' +
+        '<td class="order-id">' + escapeHtml(order.displayId) + '</td>' +
         '<td><strong class="cust-name">' + escapeHtml(order.customerName) + '</strong>' +
           (order.customerContact ? '<br><small>' + escapeHtml(order.customerContact) + '</small>' : '') +
           '<br><small>' + escapeHtml(order.ownerEmail) + '</small></td>' +
@@ -235,7 +262,7 @@
   }
 
   function getOrderTotal(order) {
-    if (typeof order.total === 'number') return order.total;
+    if (Number.isFinite(Number(order.total))) return Number(order.total);
     if (Array.isArray(order.lineItems)) {
       return order.lineItems.reduce(function (sum, item) {
         return sum + (typeof item.total === 'number' ? item.total : 0);

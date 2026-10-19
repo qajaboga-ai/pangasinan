@@ -373,9 +373,11 @@ tbody tr:last-child td {
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="supabase-client.js"></script>
   <script>
   document.addEventListener("DOMContentLoaded", () => {
-    const ORDER_STORAGE_KEY = "richersOrders";
     const STEPS = [
       { status: "Received", label: "Order Received" },
       { status: "File Verified", label: "File Verified" },
@@ -398,56 +400,106 @@ tbody tr:last-child td {
     let selectedAccount = null;
     let currentOrder = null;
 
-    loadOrder();
-    window.addEventListener("storage", (event) => {
-      if (event.key === ORDER_STORAGE_KEY || event.key === "richersAccounts") loadOrder();
-    });
+    let adminSession = null;
+    window.richersDb.requireUser({ admin: true })
+      .then((session) => {
+        if (!session) return;
+        adminSession = session;
+        return loadOrder();
+      })
+      .catch((error) => {
+        console.error("Could not load transaction details:", error);
+        document.getElementById("transactionItems").innerHTML =
+          '<tr><td colspan="4">Could not load transaction data. Check the admin account and database setup.</td></tr>';
+      });
     accountSelect.addEventListener("change", () => {
       requestedOrderId = null;
-      selectedAccount = accountChoices.find((account) => account.email === accountSelect.value) || null;
+      selectedAccount = accountChoices.find((account) => account.id === accountSelect.value) || null;
       populateOrders();
       currentOrder = ordersForSelectedAccount()[0] || null;
       updateOrderUrl();
       renderOrder();
     });
     orderSelect.addEventListener("change", () => {
-      currentOrder = orders.find((order) => order.id === orderSelect.value) || null;
+      currentOrder = orders.find((order) => String(order.id) === orderSelect.value) || null;
       requestedOrderId = currentOrder ? currentOrder.id : null;
       updateOrderUrl();
       renderOrder();
     });
 
-    recordPaymentBtn.addEventListener("click", () => {
+    recordPaymentBtn.addEventListener("click", async () => {
       if (!currentOrder || currentOrder.paid) return;
-      currentOrder.paid = true;
-      currentOrder.paidAt = new Date().toISOString();
-      saveOrder();
+      recordPaymentBtn.disabled = true;
+      try {
+        const { error } = await window.richersDb.client.rpc("record_cash_payment", {
+          target_order_id: currentOrder.id
+        });
+        if (error) throw error;
+        await loadOrder();
+      } catch (error) {
+        console.error("Could not record cash payment:", error);
+        alert("Payment was not recorded. " + error.message);
+        renderOrder();
+      }
     });
 
-    advanceBtn.addEventListener("click", () => {
+    advanceBtn.addEventListener("click", async () => {
       if (!currentOrder) return;
       const currentIndex = Math.max(0, STEPS.findIndex((step) => step.status === currentOrder.status));
       if (currentIndex >= STEPS.length - 1) return;
       currentOrder.status = STEPS[currentIndex + 1].status;
-      saveOrder();
+      await saveOrder();
     });
 
-    function loadOrder() {
-      orders = JSON.parse(localStorage.getItem(ORDER_STORAGE_KEY) || "[]");
-      accounts = JSON.parse(localStorage.getItem("richersAccounts") || "[]");
+    async function loadOrder() {
+      const [profileResult, orderResult, itemResult, paymentResult] = await Promise.all([
+        window.richersDb.client.from("profiles").select("id, full_name, email, phone, is_verified"),
+        window.richersDb.client.from("orders").select("*").order("created_at", { ascending: false }),
+        window.richersDb.client.from("order_items").select("order_id, service_name, quantity, unit_price"),
+        window.richersDb.client.from("payments").select("order_id, created_at")
+      ]);
+      if (profileResult.error) throw profileResult.error;
+      if (orderResult.error) throw orderResult.error;
+      if (itemResult.error) throw itemResult.error;
+      if (paymentResult.error) throw paymentResult.error;
+      accounts = profileResult.data.map((profile) => ({
+        id: profile.id,
+        email: profile.email,
+        fullName: profile.full_name,
+        contact: profile.phone,
+        isVerified: profile.is_verified
+      }));
+      const itemsByOrder = new Map();
+      itemResult.data.forEach((item) => {
+        if (!itemsByOrder.has(item.order_id)) itemsByOrder.set(item.order_id, []);
+        itemsByOrder.get(item.order_id).push({
+          description: item.service_name,
+          quantity: Number(item.quantity),
+          unitPrice: Number(item.unit_price),
+          total: Number(item.quantity) * Number(item.unit_price)
+        });
+      });
+      const paidOrderIds = new Set(paymentResult.data.map((payment) => payment.order_id));
+      orders = orderResult.data.map((order) => {
+        const profile = accounts.find((account) => account.id === order.customer_id);
+        return {
+          ...order,
+          ownerEmail: profile ? profile.email : "",
+          customerName: profile ? profile.fullName : "Unknown customer",
+          customerContact: profile ? profile.contact : "",
+          createdAt: order.created_at,
+          fileName: order.file_name,
+          lineItems: itemsByOrder.get(order.id) || [],
+          total: Number(order.total),
+          paid: paidOrderIds.has(order.id)
+        };
+      });
       const linkedOrder = requestedOrderId
-        ? orders.find((order) => order.id === requestedOrderId)
+        ? orders.find((order) => String(order.id) === String(requestedOrderId))
         : null;
-      selectedAccount = accounts.find((account) =>
-        account.email && linkedOrder && account.email.toLowerCase() ===
-        (linkedOrder.ownerEmail || "").toLowerCase()
-      ) || (selectedAccount && accounts.find((account) =>
-        account.email === selectedAccount.email
-      )) || (linkedOrder && {
-        email: linkedOrder.ownerEmail,
-        fullName: linkedOrder.customerName || linkedOrder.ownerEmail,
-        contact: linkedOrder.customerContact || ""
-      }) || accounts[0] || null;
+      selectedAccount = accounts.find((account) => linkedOrder && account.id === linkedOrder.customer_id) ||
+        (selectedAccount && accounts.find((account) => account.id === selectedAccount.id)) ||
+        accounts[0] || null;
 
       populateAccounts();
       populateOrders();
@@ -459,14 +511,17 @@ tbody tr:last-child td {
       renderOrder();
     }
 
-    function saveOrder() {
-      const savedOrders = JSON.parse(localStorage.getItem(ORDER_STORAGE_KEY) || "[]");
-      const index = savedOrders.findIndex((order) => order.id === currentOrder.id);
-      if (index === -1) return;
-      savedOrders[index] = currentOrder;
-      localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(savedOrders));
-      orders = savedOrders;
-      renderOrder();
+    async function saveOrder() {
+      const { error } = await window.richersDb.client
+        .from("orders")
+        .update({ status: currentOrder.status })
+        .eq("id", currentOrder.id);
+      if (error) {
+        console.error("Could not update order status:", error);
+        alert("Order status was not saved. " + error.message);
+        return;
+      }
+      await loadOrder();
     }
 
     function populateAccounts() {
@@ -499,11 +554,11 @@ tbody tr:last-child td {
       accountChoices.forEach((account) => {
         const option = new Option(
           (account.fullName || "Name unavailable") + " — " + account.email,
-          account.email
+          account.id
         );
         accountSelect.add(option);
       });
-      if (selectedAccount) accountSelect.value = selectedAccount.email;
+      if (selectedAccount) accountSelect.value = selectedAccount.id;
     }
 
     function populateOrders() {
@@ -535,14 +590,12 @@ tbody tr:last-child td {
     }
 
     function ordersForSelectedAccount() {
-      if (!selectedAccount || !selectedAccount.email) return [];
-      return orders.filter((order) => order.ownerEmail &&
-        order.ownerEmail.toLowerCase() === selectedAccount.email.toLowerCase());
+      if (!selectedAccount) return [];
+      return orders.filter((order) => order.customer_id === selectedAccount.id);
     }
 
     function belongsToSelectedAccount(order) {
-      return Boolean(selectedAccount && order.ownerEmail &&
-        selectedAccount.email.toLowerCase() === order.ownerEmail.toLowerCase());
+      return Boolean(selectedAccount && order.customer_id === selectedAccount.id);
     }
 
     function updateOrderUrl() {
@@ -641,6 +694,32 @@ tbody tr:last-child td {
         row.appendChild(total);
         body.appendChild(row);
       });
+
+      if (currentOrder.file_path) {
+        const fileRow = document.createElement("tr");
+        const fileCell = document.createElement("td");
+        fileCell.colSpan = 4;
+        fileCell.textContent = "Uploaded file: " + (currentOrder.file_name || "Order attachment") + " — preparing secure link…";
+        fileRow.appendChild(fileCell);
+        body.appendChild(fileRow);
+        window.richersDb.client.storage
+          .from("order-files")
+          .createSignedUrl(currentOrder.file_path, 60)
+          .then(({ data, error }) => {
+            if (error) throw error;
+            const link = document.createElement("a");
+            link.href = data.signedUrl;
+            link.target = "_blank";
+            link.rel = "noopener";
+            link.textContent = "Download " + (currentOrder.file_name || "order file");
+            fileCell.replaceChildren(link);
+          })
+          .catch((error) => {
+            console.error("Could not create secure order-file link:", error);
+            fileCell.textContent = "Uploaded file: " + (currentOrder.file_name || "Order attachment") +
+              " — download link unavailable.";
+          });
+      }
 
       const totalRow = document.createElement("tr");
       const totalLabel = document.createElement("td");

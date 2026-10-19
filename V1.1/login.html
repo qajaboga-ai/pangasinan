@@ -426,9 +426,10 @@ body {
 
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="supabase-client.js"></script>
   <script>
-  const ADMIN_EMAIL = 'admin@gmail.com';
-  const ADMIN_PASSWORD = 'admin123';
 
   const form = document.getElementById('loginForm');
   const errorBanner = document.getElementById('errorBanner');
@@ -448,7 +449,7 @@ body {
     passwordInput.classList.remove('error');
   }
 
-  form.addEventListener('submit', function (e) {
+  form.addEventListener('submit', async function (e) {
     e.preventDefault();
     clearError();
 
@@ -460,26 +461,19 @@ body {
       return;
     }
 
-    if (email.toLowerCase() === ADMIN_EMAIL.toLowerCase() && password === ADMIN_PASSWORD) {
-      localStorage.removeItem('richersCurrentUser');
-      localStorage.setItem('richersRole', 'admin');
-      window.location.href = 'admindashboard.html';
-      return;
+    const submitButton = form.querySelector('[type="submit"]');
+    submitButton.disabled = true;
+    try {
+      const { data, error } = await window.richersDb.client.auth.signInWithPassword({ email: email, password: password });
+      if (error) throw error;
+      const profile = await window.richersDb.getProfile(data.user);
+      window.location.href = profile.role === 'admin' ? 'admindashboard.html' : 'order.html';
+    } catch (error) {
+      console.error('Login failed:', error);
+      showError(error.message || 'Login failed. Check your email and password, then try again.');
+    } finally {
+      submitButton.disabled = false;
     }
-
-    const accounts = JSON.parse(localStorage.getItem('richersAccounts') || '[]');
-    const match = accounts.find(function (acc) {
-      return acc.email.toLowerCase() === email.toLowerCase() && acc.password === password;
-    });
-
-    if (!match) {
-      showError('Invalid email or password. Please create an account first.');
-      return;
-    }
-
-    localStorage.setItem('richersCurrentUser', JSON.stringify(match));
-    localStorage.setItem('richersRole', 'customer');
-    window.location.href = 'order.html';
   });
   </script>
 </body>
