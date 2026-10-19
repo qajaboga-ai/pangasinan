@@ -31,12 +31,18 @@ body {
 
 /* ---------- Sidebar ---------- */
 .sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  top: 0;
   width: 250px;
-  flex-shrink: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
   background: var(--sidebar-bg);
   padding: 22px 14px;
   display: flex;
   flex-direction: column;
+  z-index: 20;
 }
 
 .brand {
@@ -76,6 +82,8 @@ body {
 /* ---------- Main ---------- */
 .main {
   flex: 1;
+  min-width: 0;
+  margin-left: 250px;
   padding: 28px 34px;
 }
 
