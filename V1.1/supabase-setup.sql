@@ -258,6 +258,42 @@ $$;
 revoke all on function public.customer_edit_order(bigint, text, text, text, text, text, integer, integer, text, numeric, jsonb, text, text, text) from public;
 grant execute on function public.customer_edit_order(bigint, text, text, text, text, text, integer, integer, text, numeric, jsonb, text, text, text) to authenticated;
 
+create or replace function public.customer_cancel_order(p_order_id bigint)
+returns void
+language plpgsql
+security definer
+set search_path = pg_catalog, public, auth, pg_temp
+as $$
+declare
+  target_order public.orders%rowtype;
+begin
+  if auth.uid() is null then
+    raise exception 'You must be signed in to cancel an order';
+  end if;
+
+  select * into target_order
+  from public.orders
+  where id = p_order_id
+  for update;
+
+  if not found or target_order.customer_id <> auth.uid() then
+    raise exception 'Order not found';
+  end if;
+
+  if target_order.status <> 'Received' or target_order.payment_status <> 'Unpaid' then
+    raise exception 'Only unpaid orders that have not started processing can be cancelled';
+  end if;
+
+  update public.orders
+  set status = 'Cancelled',
+      pricing_note = concat_ws(' ', nullif(btrim(pricing_note), ''), 'Customer cancelled this order.')
+  where id = p_order_id;
+end;
+$$;
+
+revoke all on function public.customer_cancel_order(bigint) from public;
+grant execute on function public.customer_cancel_order(bigint) to authenticated;
+
 drop policy if exists "Customers read own order items or admins read all" on public.order_items;
 create policy "Customers read own order items or admins read all"
 on public.order_items for select to authenticated

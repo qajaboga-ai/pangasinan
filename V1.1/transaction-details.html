@@ -87,6 +87,15 @@ body {
   justify-content: space-between;
 }
 
+.cancelled-order-message {
+  padding: 12px 14px;
+  border-radius: 6px;
+  background: #fbe3e1;
+  color: #a52b22;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .tracker-step {
   flex: 1;
   text-align: left;
@@ -643,13 +652,17 @@ tbody tr:last-child td {
       paymentBadge.textContent = currentOrder.paid ? "PAID" : "UNPAID";
       paymentBadge.classList.toggle("paid", Boolean(currentOrder.paid));
       paymentBadge.classList.toggle("unpaid", !currentOrder.paid);
-      recordPaymentBtn.disabled = Boolean(currentOrder.paid);
-      recordPaymentBtn.textContent = currentOrder.paid ? "Payment Recorded" : "Record Cash Payment";
+      recordPaymentBtn.disabled = Boolean(currentOrder.paid) || currentOrder.status === "Cancelled";
+      recordPaymentBtn.textContent = currentOrder.paid
+        ? "Payment Recorded"
+        : currentOrder.status === "Cancelled" ? "Order Cancelled" : "Record Cash Payment";
 
       const statusIndex = STEPS.findIndex((step) => step.status === currentOrder.status);
-      const isComplete = statusIndex >= STEPS.length - 1;
+      const isComplete = statusIndex >= STEPS.length - 1 || currentOrder.status === "Cancelled";
       advanceBtn.disabled = isComplete;
-      advanceBtn.textContent = isComplete ? "Workflow Complete" : "Advance to Next Step →";
+      advanceBtn.textContent = currentOrder.status === "Cancelled"
+        ? "Order Cancelled"
+        : isComplete ? "Workflow Complete" : "Advance to Next Step →";
     }
 
     function renderItems() {
@@ -753,9 +766,17 @@ tbody tr:last-child td {
     }
 
     function renderTracker() {
+      tracker.replaceChildren();
+      if (currentOrder.status === "Cancelled") {
+        const message = document.createElement("div");
+        message.className = "cancelled-order-message";
+        message.textContent = "This order was cancelled by the customer.";
+        tracker.appendChild(message);
+        return;
+      }
+
       let statusIndex = STEPS.findIndex((step) => step.status === currentOrder.status);
       if (statusIndex < 0) statusIndex = 0;
-      tracker.replaceChildren();
 
       STEPS.forEach((step, index) => {
         const node = document.createElement("div");

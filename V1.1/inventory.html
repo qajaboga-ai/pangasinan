@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Richers Admin — Printing Paper &amp; Ink Inventory</title>
+<title>Richers Admin — Products &amp; Supplies Inventory</title>
 <link rel="stylesheet" href="styles.css">
 <style>
 .inventory-table-wrap {
@@ -55,6 +55,22 @@
   text-align: left;
 }
 
+.delete-item-button {
+  display: block;
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #b42318;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.delete-item-button:hover {
+  text-decoration: underline;
+}
+
 .inventory-summary {
   margin: -14px 0 18px;
   color: #5b6270;
@@ -92,8 +108,8 @@
   <div class="main">
     <div class="page-header-row">
       <div>
-        <h1 class="page-title">Printing Paper &amp; Ink Inventory</h1>
-        <p class="page-subtitle">Manage supply quantities, add inventory items, and monitor reorder levels</p>
+        <h1 class="page-title">Products &amp; Supplies Inventory</h1>
+        <p class="page-subtitle">Manage product and supply quantities, add inventory items, and monitor reorder levels</p>
       </div>
       <button class="btn-dark" id="addSupplyButton" type="button">+ Add Supply Item</button>
     </div>
@@ -132,6 +148,41 @@ document.addEventListener('DOMContentLoaded', async function () {
     { code: 'BND-RNG-12', description: 'Spiral Ring Binding Coils (12mm)', category: 'Finishing Materials', unit: 'Units', quantity: 50, reorder_level: 100 },
     { code: 'TAR-VIN-13', description: 'Heavy Duty Vinyl Tarpaulin Roll 13oz', category: 'Large Format Roll', unit: 'Rolls', quantity: 50, reorder_level: 5 }
   ];
+  const DEFAULT_PRODUCT_ITEMS = [
+    { code: 'PHOTO-4R', description: 'Photo Printing - 4R', category: 'Photo Printing', unit: 'Photos' },
+    { code: 'PHOTO-5R', description: 'Photo Printing - 5R', category: 'Photo Printing', unit: 'Photos' },
+    { code: 'PHOTO-A4', description: 'Photo Printing - A4', category: 'Photo Printing', unit: 'Photos' },
+    { code: 'POSTER-A2', description: 'Poster Printing - A2', category: 'Poster Printing', unit: 'Pieces' },
+    { code: 'POSTER-A1', description: 'Poster Printing - A1', category: 'Poster Printing', unit: 'Pieces' },
+    { code: 'BUS-CARD-100', description: 'Business Cards (100 pcs)', category: 'Business Printing', unit: 'Boxes' },
+    { code: 'FLYER-A5', description: 'Flyers & Leaflets (A5)', category: 'Business Printing', unit: 'Pieces' },
+    { code: 'BROCHURE-TRI', description: 'Brochure - Tri-fold', category: 'Business Printing', unit: 'Pieces' },
+    { code: 'CERTIFICATE', description: 'Certificate Printing', category: 'Document Printing', unit: 'Pieces' },
+    { code: 'INVITATION', description: 'Invitation Printing', category: 'Document Printing', unit: 'Pieces' },
+    { code: 'LEGAL-COLOR', description: 'Legal / Long Document - Color', category: 'Document Printing', unit: 'Pages' },
+    { code: 'LEGAL-BW', description: 'Legal / Long Document - Black & White', category: 'Document Printing', unit: 'Pages' },
+    { code: 'STICKER-A3', description: 'Sticker & Label Printing - A3', category: 'Sticker Printing', unit: 'Sheets' },
+    { code: 'TARPAULIN-3X5', description: 'Tarpaulin - 3x5 ft', category: 'Large Format Printing', unit: 'Pieces' },
+    { code: 'TARPAULIN-2X3', description: 'Tarpaulin - 2x3 ft', category: 'Large Format Printing', unit: 'Pieces' },
+    { code: 'TARPAULIN-4X6', description: 'Tarpaulin - 4x6 ft', category: 'Large Format Printing', unit: 'Pieces' },
+    { code: 'TARPAULIN-5X8', description: 'Tarpaulin - 5x8 ft', category: 'Large Format Printing', unit: 'Pieces' },
+    { code: 'STANDEE', description: 'Standee (with stand)', category: 'Large Format Printing', unit: 'Pieces' },
+    { code: 'SPIRAL-BIND', description: 'Spiral Binding', category: 'Binding & Finishing', unit: 'Copies' },
+    { code: 'PERFECT-BIND', description: 'Soft-Cover Perfect Binding', category: 'Binding & Finishing', unit: 'Copies' },
+    { code: 'HARDCOVER-BIND', description: 'Hard-Cover Binding (Thesis)', category: 'Binding & Finishing', unit: 'Copies' },
+    { code: 'LAMINATION-S', description: 'Lamination - Short', category: 'Binding & Finishing', unit: 'Pieces' },
+    { code: 'LAMINATION-L', description: 'Lamination - Long', category: 'Binding & Finishing', unit: 'Pieces' },
+    { code: 'FOLDING', description: 'Folding', category: 'Binding & Finishing', unit: 'Sheets' },
+    { code: 'CUT-TRIM', description: 'Cutting / Trimming', category: 'Binding & Finishing', unit: 'Copies' },
+    { code: 'OFFICE-FORMS', description: 'Office Forms (Custom)', category: 'Office Printing', unit: 'Sets' },
+    { code: 'BOOK-MANUAL', description: 'Books / Manuals (Custom)', category: 'Book Printing', unit: 'Books' },
+    { code: 'NOTEPADS', description: 'Notepads / Notebooks', category: 'Book Printing', unit: 'Pads' },
+    { code: 'PRINTED-BOX', description: 'Custom Printed Boxes', category: 'Packaging', unit: 'Boxes' },
+    { code: 'BANNER', description: 'Banner Printing', category: 'Large Format Printing', unit: 'Pieces' },
+    { code: 'SINTRA-BOARD', description: 'Sintra Board Printing', category: 'Signage', unit: 'Boards' }
+  ].map(function (item) {
+    return { ...item, quantity: 50, reorder_level: 10 };
+  });
   const rowsElement = document.getElementById('inventoryRows');
   const summaryElement = document.getElementById('inventorySummary');
   const messageElement = document.getElementById('inventoryMessage');
@@ -176,6 +227,22 @@ document.addEventListener('DOMContentLoaded', async function () {
     } catch (error) {
       console.error('Inventory update failed:', error);
       showMessage('Inventory change could not be saved. ' + error.message);
+    }
+  }
+
+  async function deleteItem(item) {
+    if (!window.confirm('Delete "' + item.description + '" (' + item.code + ') from inventory?')) return;
+    try {
+      const { error } = await window.richersDb.client
+        .from('inventory')
+        .delete()
+        .eq('id', item.id);
+      if (error) throw error;
+      clearMessage();
+      await reloadItems();
+    } catch (error) {
+      console.error('Inventory deletion failed:', error);
+      showMessage('Inventory item could not be deleted. ' + error.message);
     }
   }
 
@@ -237,11 +304,17 @@ document.addEventListener('DOMContentLoaded', async function () {
         setStock(item, item.quantity + Number(amount));
       });
       actionCell.appendChild(restock);
+      const deleteButton = document.createElement('button');
+      deleteButton.className = 'delete-item-button';
+      deleteButton.type = 'button';
+      deleteButton.textContent = 'Delete item';
+      deleteButton.addEventListener('click', () => deleteItem(item));
+      actionCell.appendChild(deleteButton);
       row.appendChild(actionCell);
       rowsElement.appendChild(row);
     });
 
-    summaryElement.textContent = items.length + ' supply items · ' + lowStockCount + ' at or below reorder threshold';
+    summaryElement.textContent = items.length + ' inventory items · ' + lowStockCount + ' at or below reorder threshold';
   }
 
   document.getElementById('addSupplyButton').addEventListener('click', async function () {
@@ -309,7 +382,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (!session) return;
     await reloadItems();
     if (items.length === 0) {
-      const { error } = await window.richersDb.client.from('inventory').insert(DEFAULT_ITEMS.map(function (item) {
+      const initialItems = DEFAULT_ITEMS.concat(DEFAULT_PRODUCT_ITEMS);
+      const { error } = await window.richersDb.client.from('inventory').insert(initialItems.map(function (item) {
         return { ...item, item_name: item.description };
       }));
       if (error) throw error;

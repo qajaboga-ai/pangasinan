@@ -256,6 +256,29 @@ body {
   color: #2454a5;
 }
 
+.order-status[data-status="Cancelled"] {
+  background: #fbe3e1;
+  color: #a52b22;
+}
+
+.cancel-order-button {
+  margin: 12px 0 0 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #a52b22;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.cancel-order-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .order-details {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -444,6 +467,26 @@ body {
     });
   });
 
+  ordersList.addEventListener('click', async function (event) {
+    const cancelButton = event.target.closest('[data-cancel-order]');
+    if (!cancelButton) return;
+    if (!window.confirm('Cancel order RPS-' + String(cancelButton.dataset.cancelOrder).padStart(6, '0') + '?')) return;
+
+    cancelButton.disabled = true;
+    try {
+      const { error } = await window.richersDb.client.rpc('customer_cancel_order', {
+        p_order_id: Number(cancelButton.dataset.cancelOrder)
+      });
+      if (error) throw error;
+      alert('Your order was cancelled. The shop can see the cancellation in its admin dashboard.');
+      window.location.reload();
+    } catch (error) {
+      console.error('Could not cancel customer order:', error);
+      alert('The order could not be cancelled. ' + error.message);
+      cancelButton.disabled = false;
+    }
+  });
+
   async function renderOrders(customerId) {
     const { data: customerOrders, error } = await window.richersDb.client
       .from('orders')
@@ -508,7 +551,9 @@ body {
           '</div>' +
           (canEdit
             ? '<a class="new-order-link" href="order.html?edit=' +
-              encodeURIComponent(order.id) + '#orderForm">Edit order</a>'
+              encodeURIComponent(order.id) + '#orderForm</a>' +
+              '<button type="button" class="cancel-order-button" data-cancel-order="' +
+              escapeHtml(order.id) + '">Cancel order</button>'
             : '') +
         '</article>'
       );

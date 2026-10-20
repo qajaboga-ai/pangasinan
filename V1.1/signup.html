@@ -740,6 +740,9 @@ form.addEventListener('submit', async function (e) {
   if (!fullName) {
     showError('fullName', 'Full name is required.');
     isValid = false;
+  } else if (!/^[\p{L}\p{M}]+(?:[ '\u2019-][\p{L}\p{M}]+)*$/u.test(fullName)) {
+    showError('fullName', 'Use letters only. Spaces, apostrophes, and hyphens are allowed.');
+    isValid = false;
   }
 
   if (!email) {

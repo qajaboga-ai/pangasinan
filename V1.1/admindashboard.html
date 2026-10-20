@@ -16,6 +16,11 @@
   font-size: 12px;
 }
 
+.badge.cancelled {
+  background: #fbe3e1;
+  color: #a52b22;
+}
+
 .order-searchbar {
   display: flex;
   align-items: center;
@@ -168,7 +173,8 @@
     'Printing',
     'Quality check',
     'Ready for Pickup',
-    'Completed'
+    'Completed',
+    'Cancelled'
   ];
 
   document.getElementById('dashboardDate').textContent =
@@ -266,7 +272,7 @@
       return new Date(payment.created_at).toDateString() === today;
     });
     const active = orders.filter(function (order) {
-      return order.status !== 'Completed';
+      return order.status !== 'Completed' && order.status !== 'Cancelled';
     });
     const pendingCount = active.filter(function (order) {
       return order.status === 'Received' || order.status === 'File Verified';
@@ -380,6 +386,7 @@
   }
 
   function statusClass(status) {
+    if (status === 'Cancelled') return 'cancelled';
     if (status === 'Completed') return 'completed';
     if (status === 'Ready for Pickup') return 'pickup';
     return 'printing';
