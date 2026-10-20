@@ -32,7 +32,7 @@
     .topbar {
       position: sticky;
       top: 0;
-      z-index: 10;
+      z-index: 20;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -48,6 +48,7 @@
       font-family: var(--display);
       font-size: 18px;
       font-weight: 800;
+      letter-spacing: 0.5px;
       text-decoration: none;
     }
 
@@ -59,6 +60,9 @@
       display: flex;
       align-items: center;
       gap: 22px;
+      font-size: 13px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
 
     .topbar-nav a {
@@ -68,7 +72,7 @@
     }
 
     .topbar-nav a:hover {
-      color: var(--blue);
+      color: var(--ink);
     }
 
     .topbar-user {
@@ -79,6 +83,15 @@
       font-size: 12.5px;
       font-weight: 600;
       white-space: nowrap;
+    }
+
+    .topbar-nav a:focus-visible {
+      outline: 3px solid var(--blue);
+      outline-offset: 3px;
+    }
+
+    @media (max-width: 920px) {
+      .topbar { padding: 12px 20px; }
     }
 
     .page {
@@ -316,7 +329,7 @@
       .topbar {
         align-items: flex-start;
         flex-direction: column;
-        padding: 14px 20px;
+        padding: 12px 20px;
       }
 
       .topbar-nav {
@@ -341,6 +354,7 @@
   <header class="topbar">
     <a href="landing.html" class="topbar-brand">RICHERS <span>PRINTING</span></a>
     <nav class="topbar-nav" aria-label="Main navigation">
+      <a href="#services">Services &amp; Pricing</a>
       <a href="order.html#orderForm">Place an Order</a>
       <a href="my-orders.html#orders">Track Order</a>
       <span class="topbar-user" id="userGreeting" hidden></span>
@@ -367,50 +381,14 @@
     <section id="services" aria-labelledby="servicesHeading">
       <div class="section-heading">
         <h2 id="servicesHeading">Services &amp; sample rates</h2>
-        <p>Rates below are estimates in Philippine pesos and may change after the shop reviews your file and requirements.</p>
-        <p id="servicesStatus" class="services-status" role="status" aria-live="polite" hidden></p>
+        <p>Rates below are starting estimates in Philippine pesos. Custom product prices may change after the shop reviews your specifications.</p>
+        <p id="servicesStatus" class="services-status" role="status" aria-live="polite"></p>
       </div>
 
-      <div class="service-grid" id="serviceGrid">
-        <article class="service-card">
-          <h3>Document Printing</h3>
-          <p>Print reports, handouts, forms, and other documents. Select A4 or Letter paper, paper weight, and color option when ordering.</p>
-          <ul class="price-list">
-            <li><span>Black &amp; white</span><strong>₱2 / page</strong></li>
-            <li><span>Full color</span><strong>₱5 / page</strong></li>
-          </ul>
-        </article>
-
-        <article class="service-card">
-          <h3>Sticker &amp; Label Printing</h3>
-          <p>Prepare product labels and sticker designs for glossy A3 sheets. The number of sheets is selected in the order form.</p>
-          <ul class="price-list">
-            <li><span>A3 glossy sheet</span><strong>₱120 / sheet</strong></li>
-          </ul>
-        </article>
-
-        <article class="service-card">
-          <h3>Large-Format Tarpaulin</h3>
-          <p>Order standard-size tarpaulin for events, announcements, and displays. Share any special size requirements with the shop for a quote.</p>
-          <ul class="price-list">
-            <li><span>Standard 3 × 5 ft</span><strong>₱150 / piece</strong></li>
-          </ul>
-        </article>
-
-        <article class="service-card">
-          <h3>Booklets &amp; Finishing</h3>
-          <p>Print booklet pages and choose ring binding, staple binding, or no binding for eligible document and booklet jobs.</p>
-          <ul class="price-list">
-            <li><span>Booklet, black &amp; white</span><strong>₱5 / page</strong></li>
-            <li><span>Booklet, full color</span><strong>₱10 / page</strong></li>
-            <li><span>Ring binding</span><strong>₱45 / copy</strong></li>
-            <li><span>Staple binding</span><strong>₱10 / copy</strong></li>
-          </ul>
-        </article>
-      </div>
+      <div class="service-grid" id="serviceGrid" aria-live="polite"></div>
 
       <div class="estimate-note">
-        <strong>About estimates:</strong> Your order form calculates a sample total from the selected service, quantity, and finishing. Final pricing is confirmed by the shop after reviewing the order.
+        <strong>About estimates:</strong> Listed rates match the products and finishing options in the customer order form. Online service prices are shown when available; otherwise, the order form's sample rate is shown. Custom product rates are starting estimates; final pricing is confirmed after the shop reviews the specifications.
       </div>
     </section>
 
@@ -481,14 +459,115 @@
       const grid = document.getElementById('serviceGrid');
       const status = document.getElementById('servicesStatus');
       const config = window.SUPABASE_CONFIG;
+      const catalog = [
+        { name: 'Document Printing - Black & White', category: 'Document Printing', unit: 'page', price: 2 },
+        { name: 'Document Printing - Full Color', category: 'Document Printing', unit: 'page', price: 5 },
+        { name: 'Document Printing - Legal - Black & White', category: 'Document Printing', unit: 'page', price: 3 },
+        { name: 'Document Printing - Legal - Full Color', category: 'Document Printing', unit: 'page', price: 6 },
+        { name: 'Booklet - Black & White', category: 'Booklets & Finishing', unit: 'page', price: 5 },
+        { name: 'Booklet - Full Color', category: 'Booklets & Finishing', unit: 'page', price: 10 },
+        { name: 'Sticker & Label Printing', category: 'Sticker & Label Printing', unit: 'sheet', price: 120 },
+        { name: 'Large-Format Tarpaulin', category: 'Large Format Printing', unit: 'piece', price: 150 },
+        { name: 'Photo Printing - 4R', category: 'Photo Printing', unit: 'photo', price: 15 },
+        { name: 'Photo Printing - 5R', category: 'Photo Printing', unit: 'photo', price: 25 },
+        { name: 'Photo Printing - A4', category: 'Photo Printing', unit: 'photo', price: 40 },
+        { name: 'Poster Print - A2', category: 'Poster Printing', unit: 'piece', price: 180 },
+        { name: 'Poster Print - A1', category: 'Poster Printing', unit: 'piece', price: 300 },
+        { name: 'Business Cards', category: 'Business Printing', unit: 'box', price: 350 },
+        { name: 'Flyers - A5', category: 'Business Printing', unit: 'piece', price: 4 },
+        { name: 'Brochure - Tri-fold', category: 'Business Printing', unit: 'piece', price: 12 },
+        { name: 'Certificate', category: 'Document Printing', unit: 'piece', price: 25 },
+        { name: 'Invitation', category: 'Document Printing', unit: 'piece', price: 20 },
+        { name: 'Large-Format Tarpaulin - 2x3 ft', category: 'Large Format Printing', unit: 'piece', price: 90 },
+        { name: 'Large-Format Tarpaulin - 4x6 ft', category: 'Large Format Printing', unit: 'piece', price: 400 },
+        { name: 'Large-Format Tarpaulin - 5x8 ft', category: 'Large Format Printing', unit: 'piece', price: 700 },
+        { name: 'Standee (with stand)', category: 'Large Format Printing', unit: 'piece', price: 650 },
+        { name: 'Office Forms (Custom)', category: 'Office Printing', unit: 'set', price: 10, startingAt: true },
+        { name: 'Books / Manuals (Custom)', category: 'Book Printing', unit: 'book', price: 80, startingAt: true },
+        { name: 'Notepads / Notebooks', category: 'Book Printing', unit: 'pad', price: 25, startingAt: true },
+        { name: 'Custom Printed Boxes', category: 'Packaging', unit: 'box', price: 50, startingAt: true },
+        { name: 'Banner Printing', category: 'Large Format Printing', unit: 'piece', price: 150, startingAt: true },
+        { name: 'Sintra Board Printing', category: 'Signage', unit: 'board', price: 250, startingAt: true },
+        { name: 'Ring Binding', category: 'Binding and Finishing', unit: 'copy', price: 45 },
+        { name: 'Staple Binding', category: 'Binding and Finishing', unit: 'copy', price: 10 },
+        { name: 'No Binding', category: 'Binding and Finishing', unit: 'copy', price: 0, zeroLabel: 'No additional charge' },
+        { name: 'Spiral Binding', category: 'Binding and Finishing', unit: 'copy', price: 35 },
+        { name: 'Perfect Binding', category: 'Binding and Finishing', unit: 'copy', price: 120 },
+        { name: 'Hard-Cover Binding', category: 'Binding and Finishing', unit: 'copy', price: 350 },
+        { name: 'Lamination - Short', category: 'Binding and Finishing', unit: 'piece', price: 15 },
+        { name: 'Lamination - Long', category: 'Binding and Finishing', unit: 'piece', price: 20 },
+        { name: 'Folding', category: 'Binding and Finishing', unit: 'sheet', price: 0.5 },
+        { name: 'Cutting / Trimming', category: 'Binding and Finishing', unit: 'copy', price: 30 }
+      ];
 
       function showStatus(message) {
         status.textContent = message;
-        status.hidden = false;
       }
 
+      function renderServices(databaseServices) {
+        const services = new Map(catalog.map(function (service) {
+          return [service.name, { ...service }];
+        }));
+        databaseServices.forEach(function (service) {
+          const existing = services.get(service.name);
+          services.set(service.name, {
+            name: service.name,
+            description: service.description,
+            category: service.category || (existing && existing.category) || 'Other Services',
+            unit: service.unit || (existing && existing.unit) || 'unit',
+            price: Number(service.unit_price) > 0 ? Number(service.unit_price) : (existing ? existing.price : 0),
+            startingAt: Boolean(existing && existing.startingAt),
+            zeroLabel: existing && existing.zeroLabel
+          });
+        });
+
+        const categories = new Map();
+        services.forEach(function (service) {
+          if (!categories.has(service.category)) categories.set(service.category, []);
+          categories.get(service.category).push(service);
+        });
+
+        const cards = document.createDocumentFragment();
+        categories.forEach(function (items, categoryName) {
+          const card = document.createElement('article');
+          card.className = 'service-card';
+
+          const heading = document.createElement('h3');
+          heading.textContent = categoryName;
+          card.appendChild(heading);
+
+          const descriptions = [...new Set(items.map(function (item) {
+            return item.description;
+          }).filter(Boolean))];
+          if (descriptions.length) {
+            const description = document.createElement('p');
+            description.textContent = descriptions.join(' ');
+            card.appendChild(description);
+          }
+
+          const priceList = document.createElement('ul');
+          priceList.className = 'price-list';
+          items.forEach(function (item) {
+            const row = document.createElement('li');
+            const name = document.createElement('span');
+            name.textContent = item.name;
+            const price = document.createElement('strong');
+            price.textContent = item.price > 0
+              ? (item.startingAt ? 'From ' : '') + '₱' + item.price.toFixed(2) + ' / ' + item.unit
+              : (item.zeroLabel || 'Request a quote');
+            row.append(name, price);
+            priceList.appendChild(row);
+          });
+          card.appendChild(priceList);
+          cards.appendChild(card);
+        });
+
+        grid.replaceChildren(cards);
+      }
+
+      renderServices([]);
       if (!config || !config.url || !config.publishableKey) {
-        showStatus('Online prices are not configured; the displayed rates are sample estimates.');
+        showStatus('Online prices could not be loaded. Showing the order form sample rates.');
         console.error('Supabase configuration is missing. Check supabase-config.js.');
         return;
       }
@@ -513,56 +592,11 @@
           throw new Error('Supabase returned an unexpected services response.');
         }
 
-        if (services.length === 0) {
-          grid.replaceChildren();
-          showStatus('No active services are listed in the online database yet.');
-          return;
-        }
-
-        const categories = new Map();
-        services.forEach(function (service) {
-          const categoryName = service.category || 'Other Services';
-          if (!categories.has(categoryName)) categories.set(categoryName, []);
-          categories.get(categoryName).push(service);
-        });
-
-        const cards = document.createDocumentFragment();
-        categories.forEach(function (items, categoryName) {
-          const card = document.createElement('article');
-          card.className = 'service-card';
-
-          const heading = document.createElement('h3');
-          heading.textContent = categoryName;
-          card.appendChild(heading);
-
-          const description = document.createElement('p');
-          description.textContent = [...new Set(items.map(function (item) {
-            return item.description;
-          }).filter(Boolean))].join(' ');
-          card.appendChild(description);
-
-          const priceList = document.createElement('ul');
-          priceList.className = 'price-list';
-          items.forEach(function (item) {
-            const row = document.createElement('li');
-            const name = document.createElement('span');
-            name.textContent = item.name;
-            const price = document.createElement('strong');
-            price.textContent = Number(item.unit_price) > 0
-              ? '₱' + Number(item.unit_price).toFixed(2) + ' / ' + item.unit
-              : 'Request a quote';
-            row.append(name, price);
-            priceList.appendChild(row);
-          });
-          card.appendChild(priceList);
-          cards.appendChild(card);
-        });
-
-        grid.replaceChildren(cards);
-        showStatus('Prices loaded from the online services list.');
+        renderServices(services);
+        showStatus('Active online prices are shown when available; otherwise, sample order-form rates are shown.');
       } catch (error) {
         console.error('Could not load services from Supabase:', error);
-        showStatus('Could not load online prices. Showing sample estimates instead.');
+        showStatus('Could not load online prices. Showing the order form sample rates.');
       }
     })();
 

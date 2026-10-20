@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Richers Printing — Configure Printing Job</title>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="footer.css">
@@ -26,15 +27,22 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #ffffff;
-  border-bottom: 1px solid #e6e8ee;
-  padding: 16px 32px;
+  gap: 20px;
+  background: rgba(246, 247, 251, 0.95);
+  border-bottom: 1px solid #e3e7f0;
+  padding: 14px 32px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
 .topbar-brand {
-  font-size: 16px;
-  font-weight: 700;
-  color: #1c2333;
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  color: var(--ink);
 }
 
 .topbar-brand span {
@@ -45,8 +53,10 @@ body {
 .topbar-nav {
   display: flex;
   align-items: center;
-  gap: 26px;
+  gap: 22px;
   font-size: 13px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .topbar-nav a {
@@ -56,17 +66,30 @@ body {
 }
 
 .topbar-nav a:hover {
-  color: #1c2333;
+  color: var(--ink);
 }
 
 .topbar-user {
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: var(--yellow);
   color: #1c2333;
+  font-size: 12.5px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .topbar-user span {
   font-weight: 400;
   color: #8a91a8;
+}
+.topbar-nav a:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 3px;
+}
+
+@media (max-width: 920px) {
+  .topbar { padding: 12px 20px; }
 }
 
 /* Main layout */
@@ -566,10 +589,13 @@ body {
 @media (max-width: 860px) {
   .content-grid { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: 1fr; }
-  .topbar { padding: 12px 18px; flex-wrap: wrap; gap: 10px; }
-  .topbar-nav { gap: 14px; flex-wrap: wrap; }
   .main { padding: 18px; }
   .page-banner { padding: 24px 22px; }
+}
+
+@media (max-width: 700px) {
+  .topbar { align-items: flex-start; flex-direction: column; padding: 12px 20px; }
+  .topbar-nav { justify-content: flex-start; gap: 12px 18px; }
 }
 
 /* ===== Quotation logic helpers ===== */
@@ -585,15 +611,16 @@ body {
 <body>
 
   <!-- Top bar -->
-  <div class="topbar">
-    <a href="order.html#orderForm" class="topbar-brand">RICHERS <span>PRINTING</span></a>
-    <div class="topbar-nav">
+  <header class="topbar">
+    <a href="landing.html" class="topbar-brand">RICHERS <span>PRINTING</span></a>
+    <nav class="topbar-nav" aria-label="Main navigation">
       <a href="services.html">Services &amp; Pricing</a>
+      <a href="#orderForm">Place an Order</a>
       <a href="my-orders.html#orders">Track Order</a>
       <span class="topbar-user" id="userGreeting">Hi, Customer</span>
       <a href="#" id="logoutLink">Logout</a>
-    </div>
-  </div>
+    </nav>
+  </header>
 
   <!-- Main content -->
   <div class="main">
@@ -891,7 +918,8 @@ const servicePriceReady = window.richersDb.client
 
 function getServicePrice(name, samplePrice) {
   const service = onlineServicePrices.get(name);
-  return service ? Number(service.unit_price) : samplePrice;
+  const onlinePrice = service ? Number(service.unit_price) : 0;
+  return onlinePrice > 0 ? onlinePrice : samplePrice;
 }
 
 const SAMPLE_PRICES = {
@@ -925,7 +953,13 @@ const SAMPLE_PRICES = {
   laminationShort: 15,
   laminationLong: 20,
   folding: 0.5,
-  cutting: 30
+  cutting: 30,
+  officeForms: 10,
+  books: 80,
+  notepads: 25,
+  boxes: 50,
+  banners: 150,
+  sintraBoards: 250
 };
 
 const PRODUCT_OPTIONS = {
@@ -943,12 +977,12 @@ const PRODUCT_OPTIONS = {
   'tarp-4x6': { name: 'Large-Format Tarpaulin - 4x6 ft', description: 'Large-Format Tarpaulin - 4x6 ft', unit: 'pieces', price: SAMPLE_PRICES.tarp4x6 },
   'tarp-5x8': { name: 'Large-Format Tarpaulin - 5x8 ft', description: 'Large-Format Tarpaulin - 5x8 ft', unit: 'pieces', price: SAMPLE_PRICES.tarp5x8 },
   standee: { name: 'Standee (with stand)', description: 'Standee (with stand)', unit: 'pieces', price: SAMPLE_PRICES.standee },
-  'office-forms': { name: 'Office Forms (Custom)', description: 'Office Forms (Custom)', unit: 'sets', price: 0, quoteOnly: true, copyLabel: 'Number of Sets' },
-  books: { name: 'Books / Manuals (Custom)', description: 'Books / Manuals (Custom)', unit: 'books', price: 0, quoteOnly: true, copyLabel: 'Number of Books' },
-  notepads: { name: 'Notepads / Notebooks', description: 'Notepads / Notebooks', unit: 'pads', price: 0, quoteOnly: true, copyLabel: 'Number of Pads' },
-  boxes: { name: 'Custom Printed Boxes', description: 'Custom Printed Boxes', unit: 'boxes', price: 0, quoteOnly: true, copyLabel: 'Number of Boxes' },
-  banners: { name: 'Banner Printing', description: 'Banner Printing', unit: 'pieces', price: 0, quoteOnly: true },
-  'sintra-boards': { name: 'Sintra Board Printing', description: 'Sintra Board Printing', unit: 'boards', price: 0, quoteOnly: true }
+  'office-forms': { name: 'Office Forms (Custom)', description: 'Office Forms (Custom)', unit: 'sets', price: SAMPLE_PRICES.officeForms, customProduct: true, copyLabel: 'Number of Sets' },
+  books: { name: 'Books / Manuals (Custom)', description: 'Books / Manuals (Custom)', unit: 'books', price: SAMPLE_PRICES.books, customProduct: true, copyLabel: 'Number of Books' },
+  notepads: { name: 'Notepads / Notebooks', description: 'Notepads / Notebooks', unit: 'pads', price: SAMPLE_PRICES.notepads, customProduct: true, copyLabel: 'Number of Pads' },
+  boxes: { name: 'Custom Printed Boxes', description: 'Custom Printed Boxes', unit: 'boxes', price: SAMPLE_PRICES.boxes, customProduct: true, copyLabel: 'Number of Boxes' },
+  banners: { name: 'Banner Printing', description: 'Banner Printing', unit: 'pieces', price: SAMPLE_PRICES.banners, customProduct: true },
+  'sintra-boards': { name: 'Sintra Board Printing', description: 'Sintra Board Printing', unit: 'boards', price: SAMPLE_PRICES.sintraBoards, customProduct: true }
 };
 
 const FINISHING_OPTIONS = {
@@ -1089,9 +1123,19 @@ function buildLineItems() {
     serviceName = product.name;
     description = product.description;
     unitPrice = getServicePrice(product.name, product.price);
-    if (product.quoteOnly) unitPrice = 0;
+    const quoteOnly = Boolean(product.quoteOnly);
     quantity = copies * (product.quantityPerCopy ? unitsPerCopy : 1);
     unit = product.unit;
+    const lineItem = {
+      serviceName: serviceName,
+      description: description,
+      quantity: quantity,
+      unit: unit,
+      unitPrice: unitPrice,
+      total: quantity * unitPrice,
+      quoteOnly: quoteOnly
+    };
+    return addFinishingLineItem(lineItem, copies, unitsPerCopy);
   }
 
   const lineItems = [{
@@ -1104,6 +1148,11 @@ function buildLineItems() {
     quoteOnly: Boolean(PRODUCT_OPTIONS[service] && PRODUCT_OPTIONS[service].quoteOnly)
   }];
 
+  return addFinishingLineItem(lineItems[0], copies, unitsPerCopy);
+}
+
+function addFinishingLineItem(lineItem, copies, unitsPerCopy) {
+  const lineItems = [lineItem];
   const finishing = FINISHING_OPTIONS[bindingOption.value];
   if (finishing) {
     const quoteOnly = lineItems.some(function (item) { return item.quoteOnly; });
@@ -1127,13 +1176,13 @@ function updateEstimate() {
   const service = serviceType.value;
   updatePaperOptions(service);
   const product = PRODUCT_OPTIONS[service];
-  const quoteOnly = Boolean(product && product.quoteOnly);
+  const customProduct = Boolean(product && product.customProduct);
   if (quoteDetailsService !== service) {
     quoteDetails.value = '';
     quoteDetailsService = service;
   }
-  quoteDetailsGroup.hidden = !quoteOnly;
-  quoteDetails.required = quoteOnly;
+  quoteDetailsGroup.hidden = !customProduct;
+  quoteDetails.required = customProduct;
   const quantityPerCopy = service === 'doc' || service === 'legal' || service === 'booklet' ||
     service === 'sticker' || bindingOption.value === 'folding' || Boolean(product && product.quantityPerCopy);
   itemQuantityLabel.textContent = bindingOption.value === 'folding'
@@ -1352,8 +1401,9 @@ document.getElementById('orderForm').addEventListener('submit', async function (
     file_name: selectedFile ? selectedFile.name : editingOrder.file_name,
     file_path: editingOrder ? editingOrder.file_path : null,
     total: lineItems.reduce(function (sum, item) { return sum + item.total; }, 0),
-    pricing_note: lineItems.some(function (item) { return item.quoteOnly; })
-      ? 'Custom product; awaiting shop quote. Specifications: ' + quoteDetails.value.trim()
+    pricing_note: quoteDetails.value.trim()
+      ? 'Starting estimate; confirm custom product specifications and final price with the shop. Specifications: ' +
+        quoteDetails.value.trim()
       : 'Sample estimate; confirm final pricing with the shop.'
   };
 
@@ -1377,7 +1427,7 @@ document.getElementById('orderForm').addEventListener('submit', async function (
           return service.name === item.description ||
             item.description.indexOf(service.name.replace(/^Document Printing - |^Booklet - /, '')) !== -1;
         });
-      const itemDescription = item.quoteOnly
+      const itemDescription = quoteDetails.value.trim()
         ? item.description + ' — Specifications: ' + quoteDetails.value.trim()
         : item.description;
       return {

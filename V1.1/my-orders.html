@@ -39,9 +39,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 32px;
-  border-bottom: 1px solid #e6e8ee;
-  background: rgba(246, 247, 251, 0.92);
+  gap: 20px;
+  padding: 14px 32px;
+  border-bottom: 1px solid #e3e7f0;
+  background: rgba(246, 247, 251, 0.95);
   backdrop-filter: blur(8px);
   position: sticky;
   top: 0;
@@ -64,8 +65,10 @@ body {
 .topbar-nav {
   display: flex;
   align-items: center;
-  gap: 26px;
+  gap: 22px;
   font-size: 13px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .topbar-nav a {
@@ -84,6 +87,17 @@ body {
   background: var(--yellow);
   color: var(--ink);
   font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.topbar-nav a:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 3px;
+}
+
+@media (max-width: 920px) {
+  .topbar { padding: 12px 20px; }
 }
 
 .main {
@@ -325,12 +339,12 @@ body {
   font-size: 14px;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 700px) {
   .topbar {
     align-items: flex-start;
     flex-direction: column;
-    gap: 14px;
-    padding: 16px 20px;
+    gap: 12px;
+    padding: 12px 20px;
   }
 
   .topbar-nav {
@@ -370,9 +384,10 @@ body {
 </head>
 <body>
   <header class="topbar">
-    <a href="order.html#orderForm" class="topbar-brand">RICHERS <span>PRINTING</span></a>
+    <a href="landing.html" class="topbar-brand">RICHERS <span>PRINTING</span></a>
     <nav class="topbar-nav" aria-label="Main navigation">
       <a href="services.html">Services &amp; Pricing</a>
+      <a href="order.html#orderForm">Place an Order</a>
       <a href="#orders">Track Order</a>
       <span class="topbar-user" id="userGreeting">Hi, Customer</span>
       <a href="#" id="logoutLink">Logout</a>
