@@ -698,8 +698,7 @@ tbody tr:last-child td {
         ["Color Option", currentOrder.color],
         ["Binding / Finishing", currentOrder.binding],
         ["Copies", currentOrder.copies],
-        ["Pages / sheets per copy", currentOrder.item_quantity],
-        ["Customer specifications", currentOrder.additional_details]
+        ["Pages / sheets per copy", currentOrder.item_quantity]
       ].filter((detail) => detail[1] !== null && detail[1] !== undefined && detail[1] !== "");
       if (specifications.length) {
         const specificationRow = document.createElement("tr");

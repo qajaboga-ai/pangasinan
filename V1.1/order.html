@@ -723,7 +723,7 @@ body {
             <div class="upload-title">Drag & Drop Printing Files Here</div>
             <div class="upload-sub">Supported formats: PDF, DOCX, PNG, JPG (Max 50MB)</div>
             <button type="button" class="browse-btn" id="browseBtn">Browse Local Files</button>
-            <input type="file" id="fileInput" style="display:none">
+            <input type="file" id="fileInput" accept=".pdf,.docx,.png,.jpg,.jpeg,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg" style="display:none">
             <div class="upload-confirm" id="uploadConfirm"></div>
           </div>
         </form>
@@ -854,6 +854,8 @@ document.getElementById('logoutLink').addEventListener('click', function (e) {
 const browseBtn = document.getElementById('browseBtn');
 const fileInput = document.getElementById('fileInput');
 const uploadConfirm = document.getElementById('uploadConfirm');
+const allowedUploadExtensions = new Set(['pdf', 'docx', 'png', 'jpg', 'jpeg']);
+const maxUploadBytes = 50 * 1024 * 1024;
 const serviceType = document.getElementById('serviceType');
 const paperType = document.getElementById('paperType');
 const colorOption = document.getElementById('colorOption');
@@ -1239,7 +1241,8 @@ async function loadOrderForEditing() {
   itemQuantity.value = order.item_quantity || 1;
   document.getElementById('pickupInput').value = order.pickup_date || '';
   updateEstimate();
-  quoteDetails.value = order.additional_details || '';
+  const savedSpecifications = (order.pricing_note || '').match(/Specifications:\s*([\s\S]*)$/);
+  quoteDetails.value = savedSpecifications ? savedSpecifications[1].trim() : '';
 
   if (order.file_name) {
     uploadConfirm.textContent = 'Current file: ' + order.file_name + '. Select a new file to replace it.';
@@ -1271,9 +1274,28 @@ browseBtn.addEventListener('click', function () {
   fileInput.click();
 });
 
+function isAllowedUpload(file) {
+  const extension = file.name.split('.').pop().toLowerCase();
+  return allowedUploadExtensions.has(extension);
+}
+
 fileInput.addEventListener('change', function () {
   if (fileInput.files.length > 0) {
     const file = fileInput.files[0];
+    if (!isAllowedUpload(file)) {
+      fileInput.value = '';
+      uploadConfirm.textContent = '';
+      uploadConfirm.classList.remove('show');
+      alert('Choose a PDF, DOCX, PNG, or JPG file.');
+      return;
+    }
+    if (file.size > maxUploadBytes) {
+      fileInput.value = '';
+      uploadConfirm.textContent = '';
+      uploadConfirm.classList.remove('show');
+      alert('The selected file is larger than 50 MB.');
+      return;
+    }
     const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
     uploadConfirm.textContent = '✓ ' + file.name + ' (' + sizeMB + 'MB) Selected; uploads when you submit.';
     uploadConfirm.classList.add('show');
@@ -1296,7 +1318,10 @@ function getMissing() {
   if (!document.getElementById('pickupInput').value.trim()) missing.push('pickup date');
   if (quoteDetails.required && !quoteDetails.value.trim()) missing.push('product specifications');
   if (fileInput.files.length === 0 && !editingOrder) missing.push('your file');
-  else if (fileInput.files.length > 0 && fileInput.files[0].size > 50 * 1024 * 1024) missing.push('a file smaller than 50MB');
+  else if (fileInput.files.length > 0) {
+    if (!isAllowedUpload(fileInput.files[0])) missing.push('a PDF, DOCX, PNG, or JPG file');
+    if (fileInput.files[0].size > maxUploadBytes) missing.push('a file smaller than 50MB');
+  }
   return missing;
 }
 
@@ -1324,12 +1349,11 @@ document.getElementById('orderForm').addEventListener('submit', async function (
     copies: Number.parseInt(document.getElementById('copiesInput').value, 10),
     item_quantity: Number.parseInt(itemQuantity.value, 10),
     pickup_date: document.getElementById('pickupInput').value.trim(),
-    additional_details: quoteDetails.value.trim() || null,
     file_name: selectedFile ? selectedFile.name : editingOrder.file_name,
     file_path: editingOrder ? editingOrder.file_path : null,
     total: lineItems.reduce(function (sum, item) { return sum + item.total; }, 0),
     pricing_note: lineItems.some(function (item) { return item.quoteOnly; })
-      ? 'Custom product; awaiting shop quote.'
+      ? 'Custom product; awaiting shop quote. Specifications: ' + quoteDetails.value.trim()
       : 'Sample estimate; confirm final pricing with the shop.'
   };
 
@@ -1353,10 +1377,13 @@ document.getElementById('orderForm').addEventListener('submit', async function (
           return service.name === item.description ||
             item.description.indexOf(service.name.replace(/^Document Printing - |^Booklet - /, '')) !== -1;
         });
+      const itemDescription = item.quoteOnly
+        ? item.description + ' — Specifications: ' + quoteDetails.value.trim()
+        : item.description;
       return {
         service_id: matchedService ? matchedService.id : null,
-        service_name: item.description,
-        description: item.description,
+        service_name: itemDescription,
+        description: itemDescription,
         quantity: item.quantity,
         unit_price: item.unitPrice
       };
@@ -1375,7 +1402,7 @@ document.getElementById('orderForm').addEventListener('submit', async function (
         p_pickup_date: payload.pickup_date,
         p_total: payload.total,
         p_items: orderItems,
-        p_additional_details: payload.additional_details,
+        p_additional_details: quoteDetails.value.trim() || null,
         p_file_name: selectedFile ? selectedFile.name : null,
         p_file_path: uploadedFilePath
       });

@@ -68,7 +68,6 @@ alter table public.orders
   add column if not exists file_name text,
   add column if not exists file_path text,
   add column if not exists pricing_note text,
-  add column if not exists additional_details text,
   add column if not exists customer_edited_at timestamptz,
   add column if not exists customer_edit_pending boolean not null default false;
 
@@ -236,11 +235,14 @@ begin
       copies = p_copies,
       item_quantity = p_item_quantity,
       pickup_date = p_pickup_date,
-      additional_details = p_additional_details,
       file_name = coalesce(p_file_name, file_name),
       file_path = coalesce(p_file_path, file_path),
       total = p_total,
-      pricing_note = 'Customer edited estimate; confirm final price with the shop.',
+      pricing_note = case
+        when nullif(btrim(p_additional_details), '') is not null then
+          'Custom product; awaiting shop quote. Specifications: ' || btrim(p_additional_details)
+        else 'Customer edited estimate; confirm final price with the shop.'
+      end,
       customer_edited_at = now(),
       customer_edit_pending = true
   where id = p_order_id;
@@ -308,9 +310,23 @@ create policy "Admins record payments"
 on public.payments for insert to authenticated
 with check (public.is_richers_admin());
 
-insert into storage.buckets (id, name, public)
-values ('order-files', 'order-files', false)
-on conflict (id) do update set public = false;
+insert into storage.buckets (id, name, public, allowed_mime_types, file_size_limit)
+values (
+  'order-files',
+  'order-files',
+  false,
+  array[
+    'application/pdf',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'image/png',
+    'image/jpeg'
+  ],
+  52428800
+)
+on conflict (id) do update
+set public = false,
+    allowed_mime_types = excluded.allowed_mime_types,
+    file_size_limit = excluded.file_size_limit;
 
 drop policy if exists "Customers upload own order files" on storage.objects;
 create policy "Customers upload own order files"
