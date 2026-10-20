@@ -548,7 +548,9 @@
             const name = document.createElement('span');
             name.textContent = item.name;
             const price = document.createElement('strong');
-            price.textContent = '₱' + Number(item.unit_price).toFixed(2) + ' / ' + item.unit;
+            price.textContent = Number(item.unit_price) > 0
+              ? '₱' + Number(item.unit_price).toFixed(2) + ' / ' + item.unit
+              : 'Request a quote';
             row.append(name, price);
             priceList.appendChild(row);
           });

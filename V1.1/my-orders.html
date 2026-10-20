@@ -481,6 +481,8 @@ body {
       const safeStatus = escapeHtml(order.status || 'Received');
       const displayOrderId = 'RPS-' + String(order.id).padStart(6, '0');
       const lineItems = itemsByOrder.get(order.id) || [];
+      const canEdit = (order.status || 'Received') === 'Received' &&
+        (order.payment_status || 'Unpaid') === 'Unpaid';
       return (
         '<article class="order-card">' +
           '<div class="order-card-header">' +
@@ -491,17 +493,24 @@ body {
           '<div class="order-details">' +
             detail('Service', order.service) +
             detail('Items', lineItems.map(function (item) {
-              return item.service_name + ' (' + item.quantity + ' × ' + formatCurrency(Number(item.unit_price)) + ')';
+              const unitPrice = Number(item.unit_price);
+              return item.service_name + ' (' + item.quantity + ' × ' +
+                (unitPrice > 0 ? formatCurrency(unitPrice) : 'Awaiting quote') + ')';
             }).join('; ')) +
             detail('Copies', String(order.copies)) +
             detail('Pickup target', order.pickup_date) +
             detail('Paper', order.paper) +
             detail('Color', order.color) +
             detail('Finishing', order.binding) +
+            detail('Specifications', order.additional_details) +
             detail('Uploaded file', order.file_name) +
-            detail('Estimated total', Number.isFinite(Number(order.total)) ? formatCurrency(Number(order.total)) : 'Awaiting quote') +
+            detail('Estimated total', Number(order.total) > 0 ? formatCurrency(Number(order.total)) : 'Awaiting quote') +
             detail('Pricing', order.pricing_note || 'Awaiting shop confirmation') +
           '</div>' +
+          (canEdit
+            ? '<a class="new-order-link" href="order.html?edit=' +
+              encodeURIComponent(order.id) + '#orderForm">Edit order</a>'
+            : '') +
         '</article>'
       );
     }).join('');

@@ -67,7 +67,10 @@ alter table public.orders
   add column if not exists pickup_date text,
   add column if not exists file_name text,
   add column if not exists file_path text,
-  add column if not exists pricing_note text;
+  add column if not exists pricing_note text,
+  add column if not exists additional_details text,
+  add column if not exists customer_edited_at timestamptz,
+  add column if not exists customer_edit_pending boolean not null default false;
 
 alter table public.order_items
   add column if not exists description text;
@@ -90,6 +93,44 @@ alter table public.inventory
   alter column category set not null;
 
 create unique index if not exists inventory_code_unique on public.inventory (code);
+
+insert into public.services (name, description, category, unit, unit_price, active)
+select new_service.name, new_service.description, new_service.category, new_service.unit,
+       new_service.unit_price, true
+from (values
+  ('Photo Printing - 4R', '4R photo printing', 'Photo Printing', 'photo', 15.00),
+  ('Photo Printing - 5R', '5R photo printing', 'Photo Printing', 'photo', 25.00),
+  ('Photo Printing - A4', 'A4 photo printing', 'Photo Printing', 'photo', 40.00),
+  ('Poster Print - A2', 'A2 poster printing', 'Poster Printing', 'piece', 180.00),
+  ('Poster Print - A1', 'A1 poster printing', 'Poster Printing', 'piece', 300.00),
+  ('Business Cards', 'Business cards, 100 pieces per box', 'Business Printing', 'box', 350.00),
+  ('Flyers - A5', 'A5 flyers and leaflets', 'Business Printing', 'piece', 4.00),
+  ('Brochure - Tri-fold', 'Tri-fold brochure printing', 'Business Printing', 'piece', 12.00),
+  ('Certificate', 'Certificate printing', 'Document Printing', 'piece', 25.00),
+  ('Invitation', 'Invitation printing', 'Document Printing', 'piece', 20.00),
+  ('Document Printing - Legal - Full Color', 'Legal or long document printing, full color', 'Document Printing', 'page', 6.00),
+  ('Document Printing - Legal - Black & White', 'Legal or long document printing, black and white', 'Document Printing', 'page', 3.00),
+  ('Large-Format Tarpaulin - 2x3 ft', '2x3 ft tarpaulin printing', 'Large Format Printing', 'piece', 90.00),
+  ('Large-Format Tarpaulin - 4x6 ft', '4x6 ft tarpaulin printing', 'Large Format Printing', 'piece', 400.00),
+  ('Large-Format Tarpaulin - 5x8 ft', '5x8 ft tarpaulin printing', 'Large Format Printing', 'piece', 700.00),
+  ('Standee (with stand)', 'Standee printing with stand', 'Large Format Printing', 'piece', 650.00),
+  ('Spiral Binding', 'Spiral binding per copy', 'Binding and Finishing', 'copy', 35.00),
+  ('Perfect Binding', 'Soft-cover perfect binding per copy', 'Binding and Finishing', 'copy', 120.00),
+  ('Hard-Cover Binding', 'Hard-cover thesis binding per copy', 'Binding and Finishing', 'copy', 350.00),
+  ('Lamination - Short', 'Short-size lamination', 'Binding and Finishing', 'piece', 15.00),
+  ('Lamination - Long', 'Long-size lamination', 'Binding and Finishing', 'piece', 20.00),
+  ('Folding', 'Folding per sheet', 'Binding and Finishing', 'sheet', 0.50),
+  ('Cutting / Trimming', 'Cutting and trimming per copy', 'Binding and Finishing', 'copy', 30.00),
+  ('Office Forms (Custom)', 'Custom office forms; quote required', 'Office Printing', 'set', 0.00),
+  ('Books / Manuals (Custom)', 'Custom books or manuals; quote required', 'Book Printing', 'book', 0.00),
+  ('Notepads / Notebooks', 'Custom notepads or notebooks; quote required', 'Book Printing', 'pad', 0.00),
+  ('Custom Printed Boxes', 'Custom printed packaging boxes; quote required', 'Packaging', 'box', 0.00),
+  ('Banner Printing', 'Custom banner printing; quote required', 'Large Format Printing', 'piece', 0.00),
+  ('Sintra Board Printing', 'Custom Sintra board printing; quote required', 'Signage', 'board', 0.00)
+) as new_service(name, description, category, unit, unit_price)
+where not exists (
+  select 1 from public.services existing where existing.name = new_service.name
+);
 
 drop policy if exists "Anyone can read active services" on public.services;
 drop policy if exists "Public can read active services" on public.services;
@@ -133,6 +174,87 @@ create policy "Admins update orders"
 on public.orders for update to authenticated
 using (public.is_richers_admin())
 with check (public.is_richers_admin());
+
+drop function if exists public.customer_edit_order(bigint, text, text, text, text, text, integer, integer, text, numeric, jsonb, text, text);
+
+create or replace function public.customer_edit_order(
+  p_order_id bigint,
+  p_service_type text,
+  p_service text,
+  p_paper text,
+  p_color text,
+  p_binding text,
+  p_copies integer,
+  p_item_quantity integer,
+  p_pickup_date text,
+  p_total numeric,
+  p_items jsonb,
+  p_additional_details text,
+  p_file_name text,
+  p_file_path text
+)
+returns void
+language plpgsql
+security definer
+set search_path = pg_catalog, public, auth, pg_temp
+as $$
+declare
+  target_order public.orders%rowtype;
+begin
+  if auth.uid() is null then
+    raise exception 'You must be signed in to edit an order';
+  end if;
+
+  select * into target_order
+  from public.orders
+  where id = p_order_id
+  for update;
+
+  if not found or target_order.customer_id <> auth.uid() then
+    raise exception 'Order not found';
+  end if;
+
+  if target_order.status <> 'Received' or target_order.payment_status <> 'Unpaid' then
+    raise exception 'Only unpaid orders that have not started processing can be edited';
+  end if;
+
+  if p_copies < 1 or p_item_quantity < 1 or p_total < 0 or
+     jsonb_typeof(p_items) <> 'array' or jsonb_array_length(p_items) = 0 then
+    raise exception 'Order details are incomplete or invalid';
+  end if;
+
+  if p_file_path is not null and p_file_path not like auth.uid()::text || '/%' then
+    raise exception 'Replacement file must belong to the signed-in customer';
+  end if;
+
+  update public.orders
+  set service_type = p_service_type,
+      service = p_service,
+      paper = p_paper,
+      color = p_color,
+      binding = p_binding,
+      copies = p_copies,
+      item_quantity = p_item_quantity,
+      pickup_date = p_pickup_date,
+      additional_details = p_additional_details,
+      file_name = coalesce(p_file_name, file_name),
+      file_path = coalesce(p_file_path, file_path),
+      total = p_total,
+      pricing_note = 'Customer edited estimate; confirm final price with the shop.',
+      customer_edited_at = now(),
+      customer_edit_pending = true
+  where id = p_order_id;
+
+  delete from public.order_items where order_id = p_order_id;
+
+  insert into public.order_items (order_id, service_id, service_name, description, quantity, unit_price)
+  select p_order_id, item.service_id, item.service_name, item.description, item.quantity, item.unit_price
+  from jsonb_populate_recordset(null::public.order_items, p_items) as item;
+end;
+$$;
+
+revoke all on function public.customer_edit_order(bigint, text, text, text, text, text, integer, integer, text, numeric, jsonb, text, text, text) from public;
+grant execute on function public.customer_edit_order(bigint, text, text, text, text, text, integer, integer, text, numeric, jsonb, text, text, text) to authenticated;
 
 drop policy if exists "Customers read own order items or admins read all" on public.order_items;
 create policy "Customers read own order items or admins read all"

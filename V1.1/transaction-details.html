@@ -472,11 +472,12 @@ tbody tr:last-child td {
       const itemsByOrder = new Map();
       itemResult.data.forEach((item) => {
         if (!itemsByOrder.has(item.order_id)) itemsByOrder.set(item.order_id, []);
+        const unitPrice = Number(item.unit_price);
         itemsByOrder.get(item.order_id).push({
           description: item.service_name,
           quantity: Number(item.quantity),
-          unitPrice: Number(item.unit_price),
-          total: Number(item.quantity) * Number(item.unit_price)
+          unitPrice: unitPrice > 0 ? unitPrice : null,
+          total: unitPrice > 0 ? Number(item.quantity) * unitPrice : null
         });
       });
       const paidOrderIds = new Set(paymentResult.data.map((payment) => payment.order_id));
@@ -655,11 +656,7 @@ tbody tr:last-child td {
       const details = [
         ...(Array.isArray(currentOrder.lineItems) ? currentOrder.lineItems : []),
         ...(!Array.isArray(currentOrder.lineItems) ? [
-          { description: currentOrder.service || "Service", quantity: currentOrder.copies || "—" },
-          { description: "Paper: " + (currentOrder.paper || "—"), quantity: "—" },
-          { description: "Color: " + (currentOrder.color || "—"), quantity: "—" },
-          { description: "Binding / Finishing: " + (currentOrder.binding || "—"), quantity: "—" },
-          { description: "Uploaded file: " + (currentOrder.fileName || "—"), quantity: "—" }
+          { description: currentOrder.service || "Service", quantity: currentOrder.copies || "—" }
         ] : [])
       ].filter((item) => item.description);
       const body = document.getElementById("transactionItems");
@@ -695,6 +692,26 @@ tbody tr:last-child td {
         body.appendChild(row);
       });
 
+      const specifications = [
+        ["Service", currentOrder.service],
+        ["Paper Type", currentOrder.paper],
+        ["Color Option", currentOrder.color],
+        ["Binding / Finishing", currentOrder.binding],
+        ["Copies", currentOrder.copies],
+        ["Pages / sheets per copy", currentOrder.item_quantity],
+        ["Customer specifications", currentOrder.additional_details]
+      ].filter((detail) => detail[1] !== null && detail[1] !== undefined && detail[1] !== "");
+      if (specifications.length) {
+        const specificationRow = document.createElement("tr");
+        const specificationCell = document.createElement("td");
+        specificationCell.colSpan = 4;
+        specificationCell.textContent = specifications
+          .map((detail) => detail[0] + ": " + detail[1])
+          .join(" · ");
+        specificationRow.appendChild(specificationCell);
+        body.appendChild(specificationRow);
+      }
+
       if (currentOrder.file_path) {
         const fileRow = document.createElement("tr");
         const fileCell = document.createElement("td");
@@ -729,7 +746,7 @@ tbody tr:last-child td {
       totalRow.appendChild(totalLabel);
       const totalAmount = document.createElement("td");
       totalAmount.className = "amount";
-      totalAmount.textContent = typeof currentOrder.total === "number"
+      totalAmount.textContent = typeof currentOrder.total === "number" && currentOrder.total > 0
         ? formatCurrency(currentOrder.total)
         : "Awaiting quote";
       totalRow.appendChild(totalAmount);

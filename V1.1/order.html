@@ -598,7 +598,7 @@ body {
   <!-- Main content -->
   <div class="main">
     <div class="page-banner">
-      <h1 class="banner-title">Set up your print job</h1>
+      <h1 class="banner-title" id="pageTitle">Set up your print job</h1>
       <p class="banner-sub">Tell us what you need, upload your file, and we'll start once it's verified.</p>
     </div>
 
@@ -606,7 +606,7 @@ body {
 
       <!-- Configure printing job -->
       <div class="card">
-        <h2 class="card-title">Configure Printing Job</h2>
+        <h2 class="card-title" id="formTitle">Configure Printing Job</h2>
 
         <form id="orderForm" novalidate>
           <div class="form-grid">
@@ -618,6 +618,27 @@ body {
                 <option value="sticker">Sticker & Label Printing</option>
                 <option value="tarp">Large Format Tarpaulin</option>
                 <option value="booklet">Booklet Binding & Finishing</option>
+                <option value="legal">Legal / Long Document Printing</option>
+                <option value="photo-4r">Photo Printing - 4R</option>
+                <option value="photo-5r">Photo Printing - 5R</option>
+                <option value="photo-a4">Photo Printing - A4</option>
+                <option value="poster-a2">Poster Printing - A2</option>
+                <option value="poster-a1">Poster Printing - A1</option>
+                <option value="business-cards">Business Cards (100 pcs)</option>
+                <option value="flyers-a5">Flyers &amp; Leaflets (A5)</option>
+                <option value="brochure-trifold">Brochure (Tri-fold)</option>
+                <option value="certificate">Certificate Printing</option>
+                <option value="invitation">Invitation Printing</option>
+                <option value="tarp-2x3">Tarpaulin - 2x3 ft</option>
+                <option value="tarp-4x6">Tarpaulin - 4x6 ft</option>
+                <option value="tarp-5x8">Tarpaulin - 5x8 ft</option>
+                <option value="standee">Standee (with stand)</option>
+                <option value="office-forms">Office Forms (Custom)</option>
+                <option value="books">Books / Manuals (Custom)</option>
+                <option value="notepads">Notepads / Notebooks</option>
+                <option value="boxes">Custom Printed Boxes</option>
+                <option value="banners">Banners</option>
+                <option value="sintra-boards">Sintra Boards</option>
               </select>
             </div>
 
@@ -625,9 +646,6 @@ body {
               <label class="field-label">Paper Type & Weight</label>
               <select class="field-select" id="paperType" required>
                 <option value="" selected disabled hidden>See details</option>
-                <option value="80">80gsm Premium White Paper</option>
-                <option value="70">70gsm Standard Paper</option>
-                <option value="glossy">Glossy Photo Paper</option>
               </select>
             </div>
 
@@ -637,6 +655,7 @@ body {
                 <option value="" selected disabled hidden>See details</option>
                 <option value="color">Full Color (High Quality)</option>
                 <option value="bw">Black & White</option>
+                <option value="grayscale">Grayscale / Draft Quality</option>
               </select>
             </div>
 
@@ -647,17 +666,29 @@ body {
                 <option value="ring">Ring Binding w/ Clear Front Cover</option>
                 <option value="staple">Staple Bound</option>
                 <option value="none">No Binding</option>
+                <option value="spiral">Spiral Binding</option>
+                <option value="perfect">Soft-Cover Perfect Binding</option>
+                <option value="hardcover">Hard-Cover Binding (Thesis)</option>
+                <option value="lamination-short">Lamination - Short</option>
+                <option value="lamination-long">Lamination - Long</option>
+                <option value="folding">Folding</option>
+                <option value="cutting">Cutting / Trimming</option>
               </select>
             </div>
 
             <div class="field-group">
-              <label class="field-label" for="copiesInput">Number of Copies</label>
+              <label class="field-label" id="copiesInputLabel" for="copiesInput">Number of Copies</label>
               <input type="number" class="field-input" id="copiesInput" value="10" min="1">
             </div>
 
-            <div class="field-group">
+            <div class="field-group" id="itemQuantityGroup">
               <label class="field-label" for="itemQuantity" id="itemQuantityLabel">Pages per Copy</label>
               <input type="number" class="field-input" id="itemQuantity" value="1" min="1">
+            </div>
+
+            <div class="field-group full" id="quoteDetailsGroup" hidden>
+              <label class="field-label" for="quoteDetails">Product specifications</label>
+              <textarea class="field-input" id="quoteDetails" rows="3" placeholder="Enter size, dimensions, page count, and other requirements."></textarea>
             </div>
 
             <div class="field-group">
@@ -668,9 +699,7 @@ body {
 
           <div class="price-estimate" id="priceEstimate" aria-live="polite">
             <div class="price-guide">
-              Sample rates: document color ₱5/page, black &amp; white ₱2/page; stickers ₱120/A3 sheet;
-              standard 3×5 ft tarpaulin ₱150/piece; booklet ₱10/color page or ₱5/black-and-white page;
-              ring binding ₱45/copy and staple binding ₱10/copy.
+              Select a product and options to calculate your estimate.
             </div>
             <div class="price-breakdown">
               <table aria-label="Estimated price breakdown">
@@ -702,7 +731,7 @@ body {
 
       <!-- Submit -->
       <div class="card">
-        <h2 class="card-title">Submit Your Order</h2>
+        <h2 class="card-title" id="submitTitle">Submit Your Order</h2>
 
         <div class="guarantee-note">
           Anti-Scam Ownership Guarantee: Your account details (<b id="noteName">your account</b>) will be linked to your transaction number for shop verification upon store pickup.
@@ -723,7 +752,7 @@ body {
           <p>This is a demo only—not payable. Scanning it will not send money or mark an order as paid.</p>
         </section>
 
-        <button type="submit" form="orderForm" class="submit-btn">Submit Printing Order</button>
+        <button type="submit" form="orderForm" class="submit-btn" id="submitOrderButton">Submit Printing Order</button>
       </div>
 
     </div>
@@ -773,6 +802,10 @@ body {
   <script>
 // ===== Auth guard: only logged-in users can view this page =====
 let currentUser = null;
+const editOrderId = new URLSearchParams(window.location.search).get('edit');
+let editingOrder = null;
+const submitOrderButton = document.getElementById('submitOrderButton');
+if (editOrderId) submitOrderButton.disabled = true;
 const userReady = window.richersDb.requireUser().then(function (session) {
   if (!session) return null;
   currentUser = {
@@ -827,7 +860,11 @@ const colorOption = document.getElementById('colorOption');
 const bindingOption = document.getElementById('bindingOption');
 const copiesInput = document.getElementById('copiesInput');
 const itemQuantity = document.getElementById('itemQuantity');
+const itemQuantityGroup = document.getElementById('itemQuantityGroup');
 const itemQuantityLabel = document.getElementById('itemQuantityLabel');
+const quoteDetailsGroup = document.getElementById('quoteDetailsGroup');
+const quoteDetails = document.getElementById('quoteDetails');
+const copiesInputLabel = document.getElementById('copiesInputLabel');
 const orderEstimate = document.getElementById('orderEstimate');
 const submitOrderEstimate = document.getElementById('submitOrderEstimate');
 const orderBreakdown = document.getElementById('orderBreakdown');
@@ -858,13 +895,143 @@ function getServicePrice(name, samplePrice) {
 const SAMPLE_PRICES = {
   documentColorPage: 5,
   documentBwPage: 2,
+  legalColorPage: 6,
+  legalBwPage: 3,
   stickerSheet: 120,
   tarpPiece: 150,
   bookletColorPage: 10,
   bookletBwPage: 5,
   ringBindingCopy: 45,
-  stapleBindingCopy: 10
+  stapleBindingCopy: 10,
+  photo4r: 15,
+  photo5r: 25,
+  photoA4: 40,
+  posterA2: 180,
+  posterA1: 300,
+  businessCards: 350,
+  flyersA5: 4,
+  brochureTrifold: 12,
+  certificate: 25,
+  invitation: 20,
+  tarp2x3: 90,
+  tarp4x6: 400,
+  tarp5x8: 700,
+  standee: 650,
+  spiralBinding: 35,
+  perfectBinding: 120,
+  hardCoverBinding: 350,
+  laminationShort: 15,
+  laminationLong: 20,
+  folding: 0.5,
+  cutting: 30
 };
+
+const PRODUCT_OPTIONS = {
+  'photo-4r': { name: 'Photo Printing - 4R', description: 'Photo Printing - 4R', unit: 'photos', price: SAMPLE_PRICES.photo4r, quantityPerCopy: true },
+  'photo-5r': { name: 'Photo Printing - 5R', description: 'Photo Printing - 5R', unit: 'photos', price: SAMPLE_PRICES.photo5r, quantityPerCopy: true },
+  'photo-a4': { name: 'Photo Printing - A4', description: 'Photo Printing - A4', unit: 'photos', price: SAMPLE_PRICES.photoA4, quantityPerCopy: true },
+  'poster-a2': { name: 'Poster Print - A2', description: 'Poster Printing - A2', unit: 'pieces', price: SAMPLE_PRICES.posterA2 },
+  'poster-a1': { name: 'Poster Print - A1', description: 'Poster Printing - A1', unit: 'pieces', price: SAMPLE_PRICES.posterA1 },
+  'business-cards': { name: 'Business Cards', description: 'Business Cards (100 pcs)', unit: 'boxes', price: SAMPLE_PRICES.businessCards, copyLabel: 'Number of Boxes' },
+  'flyers-a5': { name: 'Flyers - A5', description: 'Flyers & Leaflets (A5)', unit: 'pieces', price: SAMPLE_PRICES.flyersA5 },
+  'brochure-trifold': { name: 'Brochure - Tri-fold', description: 'Brochure (Tri-fold)', unit: 'pieces', price: SAMPLE_PRICES.brochureTrifold },
+  certificate: { name: 'Certificate', description: 'Certificate Printing', unit: 'pieces', price: SAMPLE_PRICES.certificate },
+  invitation: { name: 'Invitation', description: 'Invitation Printing', unit: 'pieces', price: SAMPLE_PRICES.invitation },
+  'tarp-2x3': { name: 'Large-Format Tarpaulin - 2x3 ft', description: 'Large-Format Tarpaulin - 2x3 ft', unit: 'pieces', price: SAMPLE_PRICES.tarp2x3 },
+  'tarp-4x6': { name: 'Large-Format Tarpaulin - 4x6 ft', description: 'Large-Format Tarpaulin - 4x6 ft', unit: 'pieces', price: SAMPLE_PRICES.tarp4x6 },
+  'tarp-5x8': { name: 'Large-Format Tarpaulin - 5x8 ft', description: 'Large-Format Tarpaulin - 5x8 ft', unit: 'pieces', price: SAMPLE_PRICES.tarp5x8 },
+  standee: { name: 'Standee (with stand)', description: 'Standee (with stand)', unit: 'pieces', price: SAMPLE_PRICES.standee },
+  'office-forms': { name: 'Office Forms (Custom)', description: 'Office Forms (Custom)', unit: 'sets', price: 0, quoteOnly: true, copyLabel: 'Number of Sets' },
+  books: { name: 'Books / Manuals (Custom)', description: 'Books / Manuals (Custom)', unit: 'books', price: 0, quoteOnly: true, copyLabel: 'Number of Books' },
+  notepads: { name: 'Notepads / Notebooks', description: 'Notepads / Notebooks', unit: 'pads', price: 0, quoteOnly: true, copyLabel: 'Number of Pads' },
+  boxes: { name: 'Custom Printed Boxes', description: 'Custom Printed Boxes', unit: 'boxes', price: 0, quoteOnly: true, copyLabel: 'Number of Boxes' },
+  banners: { name: 'Banner Printing', description: 'Banner Printing', unit: 'pieces', price: 0, quoteOnly: true },
+  'sintra-boards': { name: 'Sintra Board Printing', description: 'Sintra Board Printing', unit: 'boards', price: 0, quoteOnly: true }
+};
+
+const FINISHING_OPTIONS = {
+  ring: { name: 'Ring Binding', price: SAMPLE_PRICES.ringBindingCopy, unit: 'copies' },
+  staple: { name: 'Staple Binding', price: SAMPLE_PRICES.stapleBindingCopy, unit: 'copies' },
+  spiral: { name: 'Spiral Binding', price: SAMPLE_PRICES.spiralBinding, unit: 'copies' },
+  perfect: { name: 'Perfect Binding', price: SAMPLE_PRICES.perfectBinding, unit: 'copies' },
+  hardcover: { name: 'Hard-Cover Binding', price: SAMPLE_PRICES.hardCoverBinding, unit: 'copies' },
+  'lamination-short': { name: 'Lamination - Short', price: SAMPLE_PRICES.laminationShort, unit: 'pieces' },
+  'lamination-long': { name: 'Lamination - Long', price: SAMPLE_PRICES.laminationLong, unit: 'pieces' },
+  folding: { name: 'Folding', price: SAMPLE_PRICES.folding, unit: 'sheets' },
+  cutting: { name: 'Cutting / Trimming', price: SAMPLE_PRICES.cutting, unit: 'copies' }
+};
+
+const PAPER_TYPE_OPTIONS = {
+  '70': '70gsm Standard Paper',
+  '80': '80gsm Premium White Paper',
+  '100': '100gsm Bond Paper',
+  '120-art': '120gsm Art Paper',
+  '160-card': '160gsm Cardstock',
+  '250-card': '250gsm Cardstock (Cards and Certificates)',
+  glossy: 'Glossy Photo Paper',
+  'matte-photo': 'Matte Photo Paper',
+  vinyl: 'Vinyl Sticker Paper',
+  'legal-long': 'Legal / Long Bond Paper',
+  'tarp-material': 'Tarpaulin Material (shop stock)',
+  'standee-board': 'Standee Board (shop stock)',
+  'box-board': 'Packaging Board (shop stock)',
+  'banner-material': 'Banner Material (shop stock)',
+  'sintra-board': 'Sintra Board (specify thickness below)'
+};
+
+const PAPER_TYPES_BY_SERVICE = {
+  doc: ['70', '80', '100', '120-art'],
+  legal: ['70', '80', '100', 'legal-long'],
+  sticker: ['glossy', 'vinyl'],
+  tarp: ['tarp-material'],
+  'tarp-2x3': ['tarp-material'],
+  'tarp-4x6': ['tarp-material'],
+  'tarp-5x8': ['tarp-material'],
+  booklet: ['70', '80', '100', '120-art', '160-card'],
+  'photo-4r': ['glossy', 'matte-photo'],
+  'photo-5r': ['glossy', 'matte-photo'],
+  'photo-a4': ['glossy', 'matte-photo'],
+  'poster-a2': ['120-art', '160-card', 'matte-photo'],
+  'poster-a1': ['120-art', '160-card', 'matte-photo'],
+  'business-cards': ['120-art', '160-card', '250-card'],
+  'flyers-a5': ['100', '120-art', '160-card'],
+  'brochure-trifold': ['120-art', '160-card', '250-card'],
+  certificate: ['120-art', '160-card', '250-card'],
+  invitation: ['120-art', '160-card', '250-card'],
+  standee: ['standee-board'],
+  'office-forms': ['70', '80', '100', 'legal-long'],
+  books: ['70', '80', '100', '120-art', '160-card'],
+  notepads: ['70', '80', '100', '120-art'],
+  boxes: ['box-board', '250-card'],
+  banners: ['banner-material'],
+  'sintra-boards': ['sintra-board']
+};
+
+let paperOptionsService = null;
+let quoteDetailsService = null;
+
+function updatePaperOptions(service) {
+  if (paperOptionsService === service) return;
+  paperOptionsService = service;
+
+  paperType.replaceChildren();
+
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.disabled = true;
+  placeholder.hidden = true;
+  placeholder.selected = true;
+  placeholder.textContent = service ? 'Choose paper or material' : 'See details';
+  paperType.appendChild(placeholder);
+
+  (PAPER_TYPES_BY_SERVICE[service] || []).forEach(function (value) {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = PAPER_TYPE_OPTIONS[value];
+    paperType.appendChild(option);
+  });
+  paperType.disabled = !service;
+}
 
 function buildLineItems() {
   const service = serviceType.value;
@@ -874,59 +1041,81 @@ function buildLineItems() {
       !copies || copies < 1 || !unitsPerCopy || unitsPerCopy < 1) return null;
 
   let description;
+  let serviceName;
   let unitPrice;
   let quantity;
   let unit;
 
-  if (service === 'doc') {
-    description = 'Document printing (' + colorOption.selectedOptions[0].textContent + ', ' +
-      paperType.selectedOptions[0].textContent + ')';
-    unitPrice = colorOption.value === 'color'
-      ? getServicePrice('Document Printing - Full Color', SAMPLE_PRICES.documentColorPage)
-      : getServicePrice('Document Printing - Black & White', SAMPLE_PRICES.documentBwPage);
+  if (service === 'doc' || service === 'legal') {
+    const isLegal = service === 'legal';
+    const isColor = colorOption.value === 'color';
+    serviceName = isLegal
+      ? 'Document Printing - Legal - ' + (isColor ? 'Full Color' : 'Black & White')
+      : 'Document Printing - ' + (isColor ? 'Full Color' : 'Black & White');
+    description = isLegal
+      ? 'Legal / long document printing (' + colorOption.selectedOptions[0].textContent + ')'
+      : 'Document printing (' + colorOption.selectedOptions[0].textContent + ', ' +
+        paperType.selectedOptions[0].textContent + ')';
+    unitPrice = getServicePrice(serviceName, isLegal
+      ? (isColor ? SAMPLE_PRICES.legalColorPage : SAMPLE_PRICES.legalBwPage)
+      : (isColor ? SAMPLE_PRICES.documentColorPage : SAMPLE_PRICES.documentBwPage));
     quantity = copies * unitsPerCopy;
     unit = 'pages';
   } else if (service === 'sticker') {
+    serviceName = 'Sticker & Label Printing';
     description = 'Sticker & label printing (A3 glossy sheet)';
-    unitPrice = getServicePrice('Sticker & Label Printing', SAMPLE_PRICES.stickerSheet);
+    unitPrice = getServicePrice(serviceName, SAMPLE_PRICES.stickerSheet);
     quantity = copies * unitsPerCopy;
     unit = 'sheets';
   } else if (service === 'tarp') {
+    serviceName = 'Large-Format Tarpaulin';
     description = 'Standard 3×5 ft tarpaulin';
-    unitPrice = getServicePrice('Large-Format Tarpaulin', SAMPLE_PRICES.tarpPiece);
+    unitPrice = getServicePrice(serviceName, SAMPLE_PRICES.tarpPiece);
     quantity = copies;
     unit = 'pieces';
-  } else {
+  } else if (service === 'booklet') {
+    const isColor = colorOption.value === 'color';
+    serviceName = 'Booklet - ' + (isColor ? 'Full Color' : 'Black & White');
     description = 'Booklet printing (' + colorOption.selectedOptions[0].textContent + ', ' +
       paperType.selectedOptions[0].textContent + ')';
-    unitPrice = colorOption.value === 'color'
-      ? getServicePrice('Booklet - Full Color', SAMPLE_PRICES.bookletColorPage)
-      : getServicePrice('Booklet - Black & White', SAMPLE_PRICES.bookletBwPage);
+    unitPrice = getServicePrice(serviceName, isColor ? SAMPLE_PRICES.bookletColorPage : SAMPLE_PRICES.bookletBwPage);
     quantity = copies * unitsPerCopy;
     unit = 'pages';
+  } else {
+    const product = PRODUCT_OPTIONS[service];
+    if (!product) return null;
+    serviceName = product.name;
+    description = product.description;
+    unitPrice = getServicePrice(product.name, product.price);
+    if (product.quoteOnly) unitPrice = 0;
+    quantity = copies * (product.quantityPerCopy ? unitsPerCopy : 1);
+    unit = product.unit;
   }
 
   const lineItems = [{
+    serviceName: serviceName,
     description: description,
     quantity: quantity,
     unit: unit,
     unitPrice: unitPrice,
-    total: quantity * unitPrice
+    total: quantity * unitPrice,
+    quoteOnly: Boolean(PRODUCT_OPTIONS[service] && PRODUCT_OPTIONS[service].quoteOnly)
   }];
 
-  if (service === 'doc' || service === 'booklet') {
-    let finishingPrice = 0;
-    if (bindingOption.value === 'ring') finishingPrice = getServicePrice('Ring Binding', SAMPLE_PRICES.ringBindingCopy);
-    if (bindingOption.value === 'staple') finishingPrice = getServicePrice('Staple Binding', SAMPLE_PRICES.stapleBindingCopy);
-    if (finishingPrice > 0) {
-      lineItems.push({
-        description: bindingOption.selectedOptions[0].textContent,
-        quantity: copies,
-        unit: 'copies',
-        unitPrice: finishingPrice,
-        total: copies * finishingPrice
-      });
-    }
+  const finishing = FINISHING_OPTIONS[bindingOption.value];
+  if (finishing) {
+    const quoteOnly = lineItems.some(function (item) { return item.quoteOnly; });
+    const finishingPrice = quoteOnly ? 0 : getServicePrice(finishing.name, finishing.price);
+    const finishingQuantity = finishing.unit === 'sheets' ? copies * unitsPerCopy : copies;
+    lineItems.push({
+      serviceName: finishing.name,
+      description: bindingOption.selectedOptions[0].textContent,
+      quantity: finishingQuantity,
+      unit: finishing.unit,
+      unitPrice: finishingPrice,
+      total: finishingQuantity * finishingPrice,
+      quoteOnly: quoteOnly
+    });
   }
 
   return lineItems;
@@ -934,17 +1123,36 @@ function buildLineItems() {
 
 function updateEstimate() {
   const service = serviceType.value;
-  itemQuantityLabel.textContent = service === 'sticker'
+  updatePaperOptions(service);
+  const product = PRODUCT_OPTIONS[service];
+  const quoteOnly = Boolean(product && product.quoteOnly);
+  if (quoteDetailsService !== service) {
+    quoteDetails.value = '';
+    quoteDetailsService = service;
+  }
+  quoteDetailsGroup.hidden = !quoteOnly;
+  quoteDetails.required = quoteOnly;
+  const quantityPerCopy = service === 'doc' || service === 'legal' || service === 'booklet' ||
+    service === 'sticker' || bindingOption.value === 'folding' || Boolean(product && product.quantityPerCopy);
+  itemQuantityLabel.textContent = bindingOption.value === 'folding'
+    ? 'Sheets per Copy'
+    : service === 'sticker'
     ? 'A3 Sheets per Copy'
-    : service === 'tarp'
-      ? 'Pages / sheets (not used for tarpaulin)'
-      : 'Pages per Copy';
-  itemQuantity.disabled = service === 'tarp';
-  if (service === 'tarp') itemQuantity.value = '1';
+    : product && product.quantityPerCopy
+      ? 'Photos per Copy'
+      : quantityPerCopy
+        ? 'Pages per Copy'
+        : 'Pages per Copy';
+      itemQuantityGroup.hidden = !quantityPerCopy;
+  itemQuantity.disabled = !quantityPerCopy;
+  if (!quantityPerCopy) itemQuantity.value = '1';
+  copiesInputLabel.textContent = product && product.copyLabel ? product.copyLabel : 'Number of Copies';
 
   const lineItems = buildLineItems();
   const estimate = lineItems
-    ? formatCurrency(lineItems.reduce(function (sum, item) { return sum + item.total; }, 0))
+    ? lineItems.some(function (item) { return item.quoteOnly; })
+      ? 'Awaiting shop quote'
+      : formatCurrency(lineItems.reduce(function (sum, item) { return sum + item.total; }, 0))
     : 'Choose your options to see an estimate';
   orderEstimate.textContent = estimate;
   submitOrderEstimate.textContent = estimate;
@@ -969,11 +1177,75 @@ function updateEstimate() {
     const amount = document.createElement('td');
 
     description.textContent = item.description;
-    calculation.textContent = item.quantity + ' ' + item.unit + ' × ' + formatCurrency(item.unitPrice);
-    amount.textContent = formatCurrency(item.total);
+    calculation.textContent = item.quoteOnly
+      ? item.quantity + ' ' + item.unit + ' · price confirmed by shop'
+      : item.quantity + ' ' + item.unit + ' × ' + formatCurrency(item.unitPrice);
+    amount.textContent = item.quoteOnly ? 'Awaiting quote' : formatCurrency(item.total);
     row.append(description, calculation, amount);
     orderBreakdown.appendChild(row);
   });
+}
+
+async function loadOrderForEditing() {
+  if (!editOrderId) return;
+  const numericOrderId = Number(editOrderId);
+  if (!Number.isSafeInteger(numericOrderId) || numericOrderId < 1) {
+    alert('That order link is invalid.');
+    window.location.href = 'my-orders.html#orders';
+    return;
+  }
+
+  const user = await userReady;
+  if (!user) return;
+  await servicePriceReady;
+
+  const { data: order, error } = await window.richersDb.client
+    .from('orders')
+    .select('*')
+    .eq('id', numericOrderId)
+    .eq('customer_id', user.id)
+    .single();
+  if (error || !order) {
+    alert('That order could not be found.');
+    window.location.href = 'my-orders.html#orders';
+    return;
+  }
+
+  if ((order.status || 'Received') !== 'Received' || (order.payment_status || 'Unpaid') !== 'Unpaid') {
+    alert('This order can no longer be edited because processing has started or payment was recorded.');
+    window.location.href = 'my-orders.html#orders';
+    return;
+  }
+
+  editingOrder = order;
+  document.title = 'Edit Printing Order — Richers Printing';
+  document.getElementById('pageTitle').textContent = 'Edit your print job';
+  document.getElementById('formTitle').textContent = 'Edit Printing Job';
+  document.getElementById('submitTitle').textContent = 'Save Order Changes';
+  document.getElementById('submitOrderButton').textContent = 'Save Changes';
+
+  serviceType.value = order.service_type || '';
+  updatePaperOptions(serviceType.value);
+  paperType.value = Object.keys(PAPER_TYPE_OPTIONS).find(function (value) {
+    return PAPER_TYPE_OPTIONS[value] === order.paper;
+  }) || '';
+  colorOption.value = Array.from(colorOption.options).find(function (option) {
+    return option.textContent === order.color;
+  })?.value || '';
+  bindingOption.value = Array.from(bindingOption.options).find(function (option) {
+    return option.textContent === order.binding;
+  })?.value || '';
+  copiesInput.value = order.copies || 1;
+  itemQuantity.value = order.item_quantity || 1;
+  document.getElementById('pickupInput').value = order.pickup_date || '';
+  updateEstimate();
+  quoteDetails.value = order.additional_details || '';
+
+  if (order.file_name) {
+    uploadConfirm.textContent = 'Current file: ' + order.file_name + '. Select a new file to replace it.';
+    uploadConfirm.classList.add('show');
+  }
+  submitOrderButton.disabled = false;
 }
 
 function formatCurrency(amount) {
@@ -989,6 +1261,11 @@ function formatCurrency(amount) {
   input.addEventListener('input', updateEstimate);
 });
 updateEstimate();
+loadOrderForEditing().catch(function (error) {
+  console.error('Could not load order for editing:', error);
+  alert('The order could not be loaded for editing. ' + (error.message || 'Please try again.'));
+  window.location.href = 'my-orders.html#orders';
+});
 
 browseBtn.addEventListener('click', function () {
   fileInput.click();
@@ -1017,8 +1294,9 @@ function getMissing() {
   const quantity = parseInt(itemQuantity.value, 10);
   if (!quantity || quantity < 1) missing.push('page or sheet quantity');
   if (!document.getElementById('pickupInput').value.trim()) missing.push('pickup date');
-  if (fileInput.files.length === 0) missing.push('your file');
-  else if (fileInput.files[0].size > 50 * 1024 * 1024) missing.push('a file smaller than 50MB');
+  if (quoteDetails.required && !quoteDetails.value.trim()) missing.push('product specifications');
+  if (fileInput.files.length === 0 && !editingOrder) missing.push('your file');
+  else if (fileInput.files.length > 0 && fileInput.files[0].size > 50 * 1024 * 1024) missing.push('a file smaller than 50MB');
   return missing;
 }
 
@@ -1035,6 +1313,7 @@ document.getElementById('orderForm').addEventListener('submit', async function (
   }
 
   const lineItems = buildLineItems();
+  const selectedFile = fileInput.files[0] || null;
   const payload = {
     customer_id: user.id,
     service_type: serviceType.value,
@@ -1045,24 +1324,75 @@ document.getElementById('orderForm').addEventListener('submit', async function (
     copies: Number.parseInt(document.getElementById('copiesInput').value, 10),
     item_quantity: Number.parseInt(itemQuantity.value, 10),
     pickup_date: document.getElementById('pickupInput').value.trim(),
-    file_name: fileInput.files[0].name,
-    file_path: null,
+    additional_details: quoteDetails.value.trim() || null,
+    file_name: selectedFile ? selectedFile.name : editingOrder.file_name,
+    file_path: editingOrder ? editingOrder.file_path : null,
     total: lineItems.reduce(function (sum, item) { return sum + item.total; }, 0),
-    pricing_note: 'Sample estimate; confirm final pricing with the shop.'
+    pricing_note: lineItems.some(function (item) { return item.quoteOnly; })
+      ? 'Custom product; awaiting shop quote.'
+      : 'Sample estimate; confirm final pricing with the shop.'
   };
 
   let uploadedFilePath = null;
   let orderCreated = false;
   try {
-    const file = fileInput.files[0];
-    const safeFileName = file.name.replace(/[^\w.-]+/g, '_');
-    uploadedFilePath = user.id + '/' + Date.now() + '-' +
-      Math.random().toString(36).slice(2) + '/' + safeFileName;
-    const { error: uploadError } = await window.richersDb.client.storage
-      .from('order-files')
-      .upload(uploadedFilePath, file, { upsert: false });
-    if (uploadError) throw uploadError;
-    payload.file_path = uploadedFilePath;
+    if (selectedFile) {
+      const safeFileName = selectedFile.name.replace(/[^\w.-]+/g, '_');
+      uploadedFilePath = user.id + '/' + Date.now() + '-' +
+        Math.random().toString(36).slice(2) + '/' + safeFileName;
+      const { error: uploadError } = await window.richersDb.client.storage
+        .from('order-files')
+        .upload(uploadedFilePath, selectedFile, { upsert: false });
+      if (uploadError) throw uploadError;
+      payload.file_path = uploadedFilePath;
+    }
+
+    const orderItems = lineItems.map(function (item) {
+      const matchedService = onlineServicePrices.get(item.serviceName) ||
+        Array.from(onlineServicePrices.values()).find(function (service) {
+          return service.name === item.description ||
+            item.description.indexOf(service.name.replace(/^Document Printing - |^Booklet - /, '')) !== -1;
+        });
+      return {
+        service_id: matchedService ? matchedService.id : null,
+        service_name: item.description,
+        description: item.description,
+        quantity: item.quantity,
+        unit_price: item.unitPrice
+      };
+    });
+
+    if (editingOrder) {
+      const { error: editError } = await window.richersDb.client.rpc('customer_edit_order', {
+        p_order_id: editingOrder.id,
+        p_service_type: payload.service_type,
+        p_service: payload.service,
+        p_paper: payload.paper,
+        p_color: payload.color,
+        p_binding: payload.binding,
+        p_copies: payload.copies,
+        p_item_quantity: payload.item_quantity,
+        p_pickup_date: payload.pickup_date,
+        p_total: payload.total,
+        p_items: orderItems,
+        p_additional_details: payload.additional_details,
+        p_file_name: selectedFile ? selectedFile.name : null,
+        p_file_path: uploadedFilePath
+      });
+      if (editError) throw editError;
+      orderCreated = true;
+
+      if (uploadedFilePath && editingOrder.file_path) {
+        const { error: removeError } = await window.richersDb.client.storage
+          .from('order-files')
+          .remove([editingOrder.file_path]);
+        if (removeError) console.error('Could not remove the replaced order file:', removeError);
+      }
+
+      alert('Your changes were saved. The shop has been notified to review the updated order.');
+      window.location.href = 'my-orders.html#orders';
+      return;
+    }
 
     const { data: order, error: orderError } = await window.richersDb.client
       .from('orders')
@@ -1072,21 +1402,10 @@ document.getElementById('orderForm').addEventListener('submit', async function (
     if (orderError) throw orderError;
     orderCreated = true;
 
-    const orderItems = lineItems.map(function (item) {
-      const matchedService = Array.from(onlineServicePrices.values()).find(function (service) {
-        return service.name === item.description ||
-          item.description.indexOf(service.name.replace(/^Document Printing - |^Booklet - /, '')) !== -1;
-      });
-      return {
-        order_id: order.id,
-        service_id: matchedService ? matchedService.id : null,
-        service_name: item.description,
-        description: item.description,
-        quantity: item.quantity,
-        unit_price: item.unitPrice
-      };
+    const orderItemsWithId = orderItems.map(function (item) {
+      return { ...item, order_id: order.id };
     });
-    const { error: itemError } = await window.richersDb.client.from('order_items').insert(orderItems);
+    const { error: itemError } = await window.richersDb.client.from('order_items').insert(orderItemsWithId);
     if (itemError) {
       console.error('Order was saved, but its item breakdown was not:', itemError);
       alert('Your order was created, but its item breakdown could not be saved. Contact the shop and provide order number RPS-' + String(order.id).padStart(6, '0') + '.');
@@ -1095,6 +1414,13 @@ document.getElementById('orderForm').addEventListener('submit', async function (
 
     alert('Printing order submitted successfully! Order number: RPS-' +
       String(order.id).padStart(6, '0') + '. You can track it under Track Order.');
+    document.getElementById('orderForm').reset();
+    document.getElementById('pickupInput').value = '';
+    fileInput.value = '';
+    uploadConfirm.textContent = '';
+    uploadConfirm.classList.remove('show');
+    updatePaperOptions('');
+    updateEstimate();
   } catch (error) {
     console.error('Order submission failed:', error);
     if (uploadedFilePath && !orderCreated) {
