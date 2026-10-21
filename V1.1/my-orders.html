@@ -300,6 +300,10 @@ body {
   padding: 20px 22px;
 }
 
+.order-details > div {
+  min-width: 0;
+}
+
 .order-detail-label {
   display: block;
   margin-bottom: 4px;
@@ -313,6 +317,7 @@ body {
 .order-detail-value {
   display: block;
   overflow-wrap: anywhere;
+  word-break: break-word;
   color: #0d1b3e;
   font-size: 13px;
   font-weight: 600;
@@ -461,7 +466,8 @@ body {
     const shortName = nameParts.length
       ? nameParts.join(' ') + ' ' + lastName.charAt(0).toUpperCase() + '.'
       : lastName;
-    document.getElementById('userGreeting').textContent = 'Hi, ' + shortName + ' (Customer)';
+    document.getElementById('userGreeting').textContent = 'Hi, ' + shortName + ' (' +
+      (session.profile.role === 'admin' ? 'Admin' : 'Customer') + ')';
     await renderOrders(session.user.id);
     return session;
   }).catch(function (error) {
@@ -493,8 +499,15 @@ body {
         p_order_id: Number(cancelButton.dataset.cancelOrder)
       });
       if (error) throw error;
+      sessionStorage.setItem('richers-clear-order-form', 'true');
+      const orderCard = cancelButton.closest('.order-card');
+      const status = orderCard.querySelector('.order-status');
+      status.textContent = 'Cancelled';
+      status.dataset.status = 'Cancelled';
+      orderCard.querySelectorAll('.new-order-link, .cancel-order-button').forEach(function (action) {
+        action.remove();
+      });
       alert('Your order was cancelled. The shop can see the cancellation in its admin dashboard.');
-      window.location.reload();
     } catch (error) {
       console.error('Could not cancel customer order:', error);
       alert('The order could not be cancelled. ' + error.message);
@@ -566,7 +579,7 @@ body {
           '</div>' +
           (canEdit
             ? '<a class="new-order-link" href="order.html?edit=' +
-              encodeURIComponent(order.id) + '#orderForm</a>' +
+              encodeURIComponent(order.id) + '#orderForm">Edit order</a>' +
               '<button type="button" class="cancel-order-button" data-cancel-order="' +
               escapeHtml(order.id) + '">Cancel order</button>'
             : '') +

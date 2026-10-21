@@ -839,6 +839,7 @@ const userReady = window.richersDb.requireUser().then(function (session) {
     id: session.user.id,
     email: session.user.email,
     fullName: session.profile.full_name,
+    role: session.profile.role,
     contact: session.profile.phone || ''
   };
   return currentUser;
@@ -860,7 +861,8 @@ function formatGreetingName(fullName) {
 userReady.then(function (user) {
   if (!user) return;
   const shortName = formatGreetingName(user.fullName);
-  document.getElementById('userGreeting').textContent = 'Hi, ' + shortName + ' (Customer)';
+  document.getElementById('userGreeting').textContent = 'Hi, ' + shortName + ' (' +
+    (user.role === 'admin' ? 'Admin' : 'Customer') + ')';
   document.getElementById('noteName').textContent = shortName;
 });
 
@@ -1237,6 +1239,27 @@ function updateEstimate() {
   });
 }
 
+function clearOrderForm() {
+  document.getElementById('orderForm').reset();
+  document.getElementById('pickupInput').value = '';
+  fileInput.value = '';
+  uploadConfirm.textContent = '';
+  uploadConfirm.classList.remove('show');
+  if (editOrderId) {
+    editingOrder = null;
+    const url = new URL(window.location.href);
+    url.searchParams.delete('edit');
+    window.history.replaceState(null, '', url);
+    document.title = 'Richers Printing — Configure Printing Job';
+    document.getElementById('pageTitle').textContent = 'Set up your print job';
+    document.getElementById('formTitle').textContent = 'Configure Printing Job';
+    document.getElementById('submitTitle').textContent = 'Submit Your Order';
+    submitOrderButton.textContent = 'Submit Printing Order';
+    submitOrderButton.disabled = false;
+  }
+  updateEstimate();
+}
+
 async function loadOrderForEditing() {
   if (!editOrderId) return;
   const numericOrderId = Number(editOrderId);
@@ -1313,6 +1336,11 @@ function formatCurrency(amount) {
   input.addEventListener('input', updateEstimate);
 });
 updateEstimate();
+window.addEventListener('pageshow', function () {
+  if (sessionStorage.getItem('richers-clear-order-form') !== 'true') return;
+  sessionStorage.removeItem('richers-clear-order-form');
+  clearOrderForm();
+});
 loadOrderForEditing().catch(function (error) {
   console.error('Could not load order for editing:', error);
   alert('The order could not be loaded for editing. ' + (error.message || 'Please try again.'));
@@ -1485,19 +1513,14 @@ document.getElementById('orderForm').addEventListener('submit', async function (
     const { error: itemError } = await window.richersDb.client.from('order_items').insert(orderItemsWithId);
     if (itemError) {
       console.error('Order was saved, but its item breakdown was not:', itemError);
+      clearOrderForm();
       alert('Your order was created, but its item breakdown could not be saved. Contact the shop and provide order number RPS-' + String(order.id).padStart(6, '0') + '.');
       return;
     }
 
     alert('Printing order submitted successfully! Order number: RPS-' +
       String(order.id).padStart(6, '0') + '. You can track it under Track Order.');
-    document.getElementById('orderForm').reset();
-    document.getElementById('pickupInput').value = '';
-    fileInput.value = '';
-    uploadConfirm.textContent = '';
-    uploadConfirm.classList.remove('show');
-    updatePaperOptions('');
-    updateEstimate();
+    clearOrderForm();
   } catch (error) {
     console.error('Order submission failed:', error);
     if (uploadedFilePath && !orderCreated) {

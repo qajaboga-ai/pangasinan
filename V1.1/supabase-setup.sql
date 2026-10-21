@@ -174,6 +174,7 @@ on public.orders for update to authenticated
 using (public.is_richers_admin())
 with check (public.is_richers_admin());
 
+drop function if exists public.customer_edit_order(bigint, text, text, text, text, text, integer, integer, text, numeric, jsonb, text, text, text);
 drop function if exists public.customer_edit_order(bigint, text, text, text, text, text, integer, integer, text, numeric, jsonb, text, text);
 
 create or replace function public.customer_edit_order(
@@ -432,3 +433,5 @@ $$;
 grant execute on function public.is_richers_admin() to anon, authenticated;
 revoke all on function public.record_cash_payment(bigint) from public, anon;
 grant execute on function public.record_cash_payment(bigint) to authenticated;
+
+notify pgrst, 'reload schema';

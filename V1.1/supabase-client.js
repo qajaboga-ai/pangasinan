@@ -41,4 +41,20 @@
     getProfile: getProfile,
     requireUser: requireUser
   };
+
+  const adminLogoutLink = document.getElementById('adminLogoutLink');
+  if (adminLogoutLink) {
+    adminLogoutLink.addEventListener('click', async function (event) {
+      event.preventDefault();
+      if (!window.confirm('Are you sure you want to log out?')) return;
+      try {
+        const { error } = await client.auth.signOut();
+        if (error) throw error;
+        window.location.href = 'login.html';
+      } catch (error) {
+        console.error('Admin logout failed:', error);
+        alert('Logout failed. Please try again.');
+      }
+    });
+  }
 })();
