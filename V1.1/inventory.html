@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       decrement.type = 'button';
       decrement.textContent = '−';
       decrement.setAttribute('aria-label', 'Use one ' + item.unit + ' of ' + item.description);
-      decrement.disabled = item.quantity === 0;
+      decrement.disabled = item.quantity <= 0;
       const stockValue = document.createElement('span');
       stockValue.className = 'stock-value';
       stockValue.textContent = item.quantity + ' ' + item.unit;

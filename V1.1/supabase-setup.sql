@@ -93,6 +93,127 @@ alter table public.inventory
 
 create unique index if not exists inventory_code_unique on public.inventory (code);
 
+create or replace function public.inventory_code_for_order_item(p_description text)
+returns text
+language sql
+immutable
+set search_path = pg_catalog
+as $$
+  select case
+    when lower(btrim(split_part(coalesce(p_description, ''), ' — Specifications:', 1)))
+      like 'legal / long document printing (%full color%' then 'LEGAL-COLOR'
+    when lower(btrim(split_part(coalesce(p_description, ''), ' — Specifications:', 1)))
+      like 'legal / long document printing (%black & white%' then 'LEGAL-BW'
+    else case lower(btrim(split_part(coalesce(p_description, ''), ' — Specifications:', 1)))
+      when 'photo printing - 4r' then 'PHOTO-4R'
+      when 'photo printing - 5r' then 'PHOTO-5R'
+      when 'photo printing - a4' then 'PHOTO-A4'
+      when 'poster printing - a2' then 'POSTER-A2'
+      when 'poster printing - a1' then 'POSTER-A1'
+      when 'business cards (100 pcs)' then 'BUS-CARD-100'
+      when 'flyers & leaflets (a5)' then 'FLYER-A5'
+      when 'brochure (tri-fold)' then 'BROCHURE-TRI'
+      when 'certificate printing' then 'CERTIFICATE'
+      when 'invitation printing' then 'INVITATION'
+      when 'legal / long document - color' then 'LEGAL-COLOR'
+      when 'legal / long document - black & white' then 'LEGAL-BW'
+      when 'sticker & label printing - a3' then 'STICKER-A3'
+      when 'standard 3×5 ft tarpaulin' then 'TARPAULIN-3X5'
+      when 'tarpaulin - 3x5 ft' then 'TARPAULIN-3X5'
+      when 'tarpaulin - 2x3 ft' then 'TARPAULIN-2X3'
+      when 'tarpaulin - 4x6 ft' then 'TARPAULIN-4X6'
+      when 'tarpaulin - 5x8 ft' then 'TARPAULIN-5X8'
+      when 'standee (with stand)' then 'STANDEE'
+      when 'ring binding w/ clear front cover' then 'BND-RNG-12'
+      when 'spiral binding' then 'SPIRAL-BIND'
+      when 'soft-cover perfect binding' then 'PERFECT-BIND'
+      when 'hard-cover binding (thesis)' then 'HARDCOVER-BIND'
+      when 'lamination - short' then 'LAMINATION-S'
+      when 'lamination - long' then 'LAMINATION-L'
+      when 'folding' then 'FOLDING'
+      when 'cutting / trimming' then 'CUT-TRIM'
+      when 'office forms (custom)' then 'OFFICE-FORMS'
+      when 'books / manuals (custom)' then 'BOOK-MANUAL'
+      when 'notepads / notebooks' then 'NOTEPADS'
+      when 'custom printed boxes' then 'PRINTED-BOX'
+      when 'banner printing' then 'BANNER'
+      when 'custom sintra board printing' then 'SINTRA-BOARD'
+      else null
+    end
+  end;
+$$;
+
+create or replace function public.adjust_inventory_for_order_item()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare
+  item_description text;
+  quantity_change integer;
+  inventory_code text;
+begin
+  if tg_op = 'DELETE' then
+    item_description := old.description;
+    quantity_change := old.quantity;
+  else
+    item_description := new.description;
+    quantity_change := -new.quantity;
+  end if;
+
+  inventory_code := public.inventory_code_for_order_item(item_description);
+  if inventory_code is not null then
+    update public.inventory
+    set quantity = quantity + quantity_change,
+        updated_at = now()
+    where code = inventory_code;
+  end if;
+
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists adjust_inventory_for_order_item on public.order_items;
+create trigger adjust_inventory_for_order_item
+after insert or delete on public.order_items
+for each row execute function public.adjust_inventory_for_order_item();
+alter table public.order_items enable trigger adjust_inventory_for_order_item;
+
+create or replace function public.restore_cancelled_order_inventory()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+begin
+  if new.status = 'Cancelled' and old.status is distinct from new.status then
+    update public.inventory inventory
+    set quantity = inventory.quantity + order_items.quantity,
+        updated_at = now()
+    from (
+      select public.inventory_code_for_order_item(description) as code,
+             sum(quantity) as quantity
+      from public.order_items
+      where order_id = new.id
+      group by 1
+    ) order_items
+    where order_items.code is not null
+      and inventory.code = order_items.code;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists restore_cancelled_order_inventory on public.orders;
+create trigger restore_cancelled_order_inventory
+after update of status on public.orders
+for each row execute function public.restore_cancelled_order_inventory();
+alter table public.orders enable trigger restore_cancelled_order_inventory;
+
 insert into public.services (name, description, category, unit, unit_price, active)
 select new_service.name, new_service.description, new_service.category, new_service.unit,
        new_service.unit_price, true
