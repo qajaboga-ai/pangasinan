@@ -364,37 +364,6 @@ body {
   line-height: 1.5;
 }
 
-.demo-payment-qr {
-  margin: 18px 0;
-  padding: 16px;
-  border: 1px dashed #aab4d0;
-  border-radius: 12px;
-  background: #ffffff;
-  text-align: center;
-}
-
-.demo-payment-qr img {
-  display: block;
-  width: 180px;
-  height: 180px;
-  margin: 12px auto;
-  image-rendering: pixelated;
-}
-
-.demo-payment-qr h3 {
-  margin: 0;
-  color: var(--ink);
-  font-size: 15px;
-}
-
-.demo-payment-qr p {
-  margin: 0;
-  color: #8a341f;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.5;
-}
-
 /* Order page visual enhancements */
 
 :root {
@@ -719,8 +688,17 @@ body {
             </div>
 
             <div class="field-group">
-              <label class="field-label" for="pickupInput">Target Pickup Date</label>
-              <input type="text" class="field-input" id="pickupInput" value="July 30, 2026 - 3:00 PM">
+              <label class="field-label" for="pickupDateInput">Target Pickup Date</label>
+              <input type="date" class="field-input" id="pickupDateInput" required>
+              <input type="hidden" id="pickupInput">
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="pickupTimeInput">Pickup Time</label>
+              <select class="field-select" id="pickupTimeInput" required>
+                <option value="">Choose a pickup date first</option>
+              </select>
+              <small class="price-guide">Only available hourly times are shown. Past hours are not listed.</small>
             </div>
           </div>
 
@@ -769,15 +747,6 @@ body {
           <strong id="submitOrderEstimate">Choose your options to see an estimate</strong>
         </div>
         <p class="submit-estimate-note">This is a sample estimate. The shop will confirm the final price.</p>
-
-        <section class="demo-payment-qr" aria-labelledby="demoPaymentTitle">
-          <h3 id="demoPaymentTitle"></h3>
-          <img
-            src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAADcAQMAAAAhlF3CAAAABlBMVEX///8AAABVwtN+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABUElEQVRYheWYsbGDQAxE5SEgpARKoTQozaVcCYQEN5alXR3G8xnn/6TABh4Jy91qhcivWhVV5aHt0shLWrqCG87roCqqT5HpGCvuWTLBRXUfXSHVjQpVHCeEUCgBtItqe6NgJeSDsR1eBsVvlJu90jsMYwRcn3Mxhf64Zu/wq2yZzHrIff1vCBF2PreLYH9HCJIJ4u1LiwLzDmOkSWaBkIhdEFFg3keuE1eoI2is2IMPNH2xlQCmiD9ZIPyOeRdv324UjwXoiFngGkY/wBPoD/UqXwroe3/SMwqUyYwR00Abg3qBS2vrLfe5D/I4ETRP+HRBU6hVHtiKy8SXTCh0rQ7gygc+Z3vLfej2ueDmvxEFrAuWU6GlJIILB/+XMOvFdmAeygbZ/n3mjSB8VagryNm+1ZYKcjtE5LGZ19LvaYxZIPX4fOCQCL+3X3k6hb/qDY+D04Q6C/l2AAAAAElFTkSuQmCC"
-            alt="Demo QR code. Scanning displays that this is not a payment."
-          >
-          <p>This is a demo only—not payable. Scanning it will not send money or mark an order as paid.</p>
-        </section>
 
         <button type="submit" form="orderForm" class="submit-btn" id="submitOrderButton">Submit Printing Order</button>
       </div>
@@ -899,7 +868,113 @@ const copiesInputLabel = document.getElementById('copiesInputLabel');
 const orderEstimate = document.getElementById('orderEstimate');
 const submitOrderEstimate = document.getElementById('submitOrderEstimate');
 const orderBreakdown = document.getElementById('orderBreakdown');
+const pickupInput = document.getElementById('pickupInput');
+const pickupDateInput = document.getElementById('pickupDateInput');
+const pickupTimeInput = document.getElementById('pickupTimeInput');
 let onlineServicePrices = new Map();
+
+function formatLocalDate(date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0')
+  ].join('-');
+}
+
+function formatLocalDateTime(date) {
+  return formatLocalDate(date) + 'T' +
+    String(date.getHours()).padStart(2, '0') + ':' +
+    String(date.getMinutes()).padStart(2, '0');
+}
+
+function getFirstAvailablePickupHour(now) {
+  return now.getMinutes() > 0 || now.getSeconds() > 0 || now.getMilliseconds() > 0
+    ? now.getHours() + 1
+    : now.getHours();
+}
+
+function renderPickupTimeOptions(preferredTime) {
+  const selectedDate = pickupDateInput.value;
+  const now = new Date();
+  const today = formatLocalDate(now);
+  const isPastDate = selectedDate && selectedDate < today;
+  const firstHour = isPastDate
+    ? 24
+    : selectedDate === today ? getFirstAvailablePickupHour(now) : 0;
+  const previousTime = preferredTime || pickupTimeInput.value;
+
+  pickupTimeInput.replaceChildren();
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = selectedDate ? 'Choose a pickup time' : 'Choose a pickup date first';
+  pickupTimeInput.appendChild(placeholder);
+
+  for (let hour = Math.max(0, firstHour); hour < 24; hour++) {
+    const timeValue = String(hour).padStart(2, '0') + ':00';
+    const timeLabel = new Date(2000, 0, 1, hour).toLocaleTimeString(undefined, {
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+    pickupTimeInput.add(new Option(timeLabel, timeValue));
+  }
+
+  pickupTimeInput.disabled = pickupTimeInput.options.length === 1;
+  if (previousTime && Array.from(pickupTimeInput.options).some(function (option) {
+    return option.value === previousTime;
+  })) {
+    pickupTimeInput.value = previousTime;
+  } else {
+    pickupTimeInput.value = '';
+  }
+  syncPickupDateTime();
+}
+
+function setPickupDateMinimum() {
+  pickupDateInput.min = formatLocalDate(new Date());
+  renderPickupTimeOptions();
+}
+
+function syncPickupDateTime() {
+  pickupInput.value = pickupDateInput.value && pickupTimeInput.value
+    ? pickupDateInput.value + 'T' + pickupTimeInput.value
+    : '';
+}
+
+function normalizePickupDate(value) {
+  if (!value) return '';
+  const localDateTime = value.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/);
+  let pickupDate;
+  if (localDateTime) {
+    pickupDate = new Date(
+      Number(localDateTime[1]),
+      Number(localDateTime[2]) - 1,
+      Number(localDateTime[3]),
+      Number(localDateTime[4] || 0),
+      Number(localDateTime[5] || 0)
+    );
+  } else {
+    pickupDate = new Date(value.replace(/\s+-\s+/, ' '));
+  }
+
+  if (Number.isNaN(pickupDate.getTime())) return '';
+  if (pickupDate.getMinutes() > 0 || pickupDate.getSeconds() > 0 || pickupDate.getMilliseconds() > 0) {
+    pickupDate.setHours(pickupDate.getHours() + 1);
+  }
+  pickupDate.setMinutes(0, 0, 0);
+  return formatLocalDateTime(pickupDate);
+}
+
+setPickupDateMinimum();
+pickupDateInput.value = formatLocalDate(new Date());
+renderPickupTimeOptions();
+pickupDateInput.addEventListener('focus', setPickupDateMinimum);
+pickupDateInput.addEventListener('change', function () {
+  setPickupDateMinimum();
+});
+pickupTimeInput.addEventListener('focus', function () {
+  renderPickupTimeOptions();
+});
+pickupTimeInput.addEventListener('change', syncPickupDateTime);
 
 const servicePriceReady = window.richersDb.client
   .from('services')
@@ -1241,7 +1316,9 @@ function updateEstimate() {
 
 function clearOrderForm() {
   document.getElementById('orderForm').reset();
-  document.getElementById('pickupInput').value = '';
+  setPickupDateMinimum();
+  pickupDateInput.value = formatLocalDate(new Date());
+  renderPickupTimeOptions();
   fileInput.value = '';
   uploadConfirm.textContent = '';
   uploadConfirm.classList.remove('show');
@@ -1311,7 +1388,9 @@ async function loadOrderForEditing() {
   })?.value || '';
   copiesInput.value = order.copies || 1;
   itemQuantity.value = order.item_quantity || 1;
-  document.getElementById('pickupInput').value = order.pickup_date || '';
+  const savedPickup = normalizePickupDate(order.pickup_date);
+  pickupDateInput.value = savedPickup ? savedPickup.slice(0, 10) : formatLocalDate(new Date());
+  renderPickupTimeOptions(savedPickup ? savedPickup.slice(11, 16) : '');
   updateEstimate();
   const savedSpecifications = (order.pricing_note || '').match(/Specifications:\s*([\s\S]*)$/);
   quoteDetails.value = savedSpecifications ? savedSpecifications[1].trim() : '';
@@ -1392,7 +1471,14 @@ function getMissing() {
   if (!copies || copies < 1) missing.push('number of copies');
   const quantity = parseInt(itemQuantity.value, 10);
   if (!quantity || quantity < 1) missing.push('page or sheet quantity');
-  if (!document.getElementById('pickupInput').value.trim()) missing.push('pickup date');
+  setPickupDateMinimum();
+  if (pickupDateInput.value && pickupDateInput.value < pickupDateInput.min) {
+    missing.push('a pickup date that is not in the past');
+  } else if (!pickupInput.value) {
+    missing.push('pickup date and time');
+  } else if (pickupInput.value < pickupInput.min) {
+    missing.push('a pickup time in a future hour');
+  }
   if (quoteDetails.required && !quoteDetails.value.trim()) missing.push('product specifications');
   if (fileInput.files.length === 0 && !editingOrder) missing.push('your file');
   else if (fileInput.files.length > 0) {
@@ -1425,7 +1511,7 @@ document.getElementById('orderForm').addEventListener('submit', async function (
     binding: document.getElementById('bindingOption').selectedOptions[0].textContent,
     copies: Number.parseInt(document.getElementById('copiesInput').value, 10),
     item_quantity: Number.parseInt(itemQuantity.value, 10),
-    pickup_date: document.getElementById('pickupInput').value.trim(),
+    pickup_date: pickupInput.value,
     file_name: selectedFile ? selectedFile.name : editingOrder.file_name,
     file_path: editingOrder ? editingOrder.file_path : null,
     total: lineItems.reduce(function (sum, item) { return sum + item.total; }, 0),
@@ -1518,9 +1604,7 @@ document.getElementById('orderForm').addEventListener('submit', async function (
       return;
     }
 
-    alert('Printing order submitted successfully! Order number: RPS-' +
-      String(order.id).padStart(6, '0') + '. You can track it under Track Order.');
-    clearOrderForm();
+    window.location.href = 'order-confirmation.html?id=' + encodeURIComponent(order.id);
   } catch (error) {
     console.error('Order submission failed:', error);
     if (uploadedFilePath && !orderCreated) {

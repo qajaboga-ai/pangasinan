@@ -297,10 +297,115 @@ tbody tr:last-child td {
   color: var(--text-muted);
 }
 
+.receipt {
+  margin-top: 24px;
+  padding: 28px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--card-bg);
+}
+
+#print-receipt-btn[hidden] {
+  display: none !important;
+}
+
+.receipt-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.receipt-header h2 {
+  margin: 0 0 4px;
+  font-size: 22px;
+}
+
+.receipt-header p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.receipt-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 24px;
+  margin: 0 0 20px;
+}
+
+.receipt-meta div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.receipt-meta dt { color: var(--text-muted); }
+.receipt-meta dd { margin: 0; font-weight: 700; text-align: right; }
+
+.receipt table th,
+.receipt table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+}
+
+.receipt table th:last-child,
+.receipt table td:last-child {
+  text-align: right;
+}
+
+.receipt-total {
+  margin-top: 18px;
+  text-align: right;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.receipt-footer {
+  margin: 24px 0 0;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+@media print {
+  @page { margin: 15mm; }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  #receipt,
+  #receipt * {
+    visibility: visible !important;
+  }
+
+  #receipt[hidden] {
+    display: none !important;
+  }
+
+  #receipt {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: #fff;
+  }
+}
+
 @media (max-width: 640px) {
   .transaction-selectors {
     grid-template-columns: 1fr;
   }
+
+  .receipt-meta { grid-template-columns: 1fr; }
+  .receipt-header { flex-direction: column; }
 }
 </style>
 </head>
@@ -378,9 +483,34 @@ tbody tr:last-child td {
         <hr class="divider">
 
         <button id="record-payment-btn" class="btn-primary" disabled>Record Cash Payment</button>
+        <button id="print-receipt-btn" class="btn-link-small" type="button" hidden>Print Receipt</button>
       </div>
 
     </div>
+
+    <section id="receipt" class="receipt" aria-labelledby="receiptTitle" hidden>
+      <header class="receipt-header">
+        <div>
+          <h2 id="receiptTitle">Richers Printing Services</h2>
+          <p>Payment Receipt</p>
+        </div>
+        <strong id="receiptOrderNumber"></strong>
+      </header>
+      <dl class="receipt-meta">
+        <div><dt>Customer</dt><dd id="receiptCustomer"></dd></div>
+        <div><dt>Contact</dt><dd id="receiptContact"></dd></div>
+        <div><dt>Payment date</dt><dd id="receiptPaymentDate"></dd></div>
+        <div><dt>Payment method</dt><dd id="receiptPaymentMethod"></dd></div>
+      </dl>
+      <table>
+        <thead>
+          <tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr>
+        </thead>
+        <tbody id="receiptItems"></tbody>
+      </table>
+      <p class="receipt-total">Paid: <span id="receiptAmount"></span></p>
+      <p class="receipt-footer">Thank you for choosing Richers Printing Services.</p>
+    </section>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -397,6 +527,8 @@ tbody tr:last-child td {
       { status: "Completed", label: "Completed" }
     ];
     const recordPaymentBtn = document.getElementById("record-payment-btn");
+    const printReceiptBtn = document.getElementById("print-receipt-btn");
+    const receipt = document.getElementById("receipt");
     const paymentBadge = document.getElementById("payment-status-badge");
     const advanceBtn = document.getElementById("advance-step-btn");
     const tracker = document.getElementById("tracker");
@@ -453,6 +585,11 @@ tbody tr:last-child td {
       }
     });
 
+    printReceiptBtn.addEventListener("click", () => {
+      if (!currentOrder || !currentOrder.paid) return;
+      window.print();
+    });
+
     advanceBtn.addEventListener("click", async () => {
       if (!currentOrder) return;
       const currentIndex = Math.max(0, STEPS.findIndex((step) => step.status === currentOrder.status));
@@ -466,7 +603,7 @@ tbody tr:last-child td {
         window.richersDb.client.from("profiles").select("id, full_name, email, phone, is_verified"),
         window.richersDb.client.from("orders").select("*").order("created_at", { ascending: false }),
         window.richersDb.client.from("order_items").select("order_id, service_name, quantity, unit_price"),
-        window.richersDb.client.from("payments").select("order_id, created_at")
+        window.richersDb.client.from("payments").select("order_id, amount, method, created_at")
       ]);
       if (profileResult.error) throw profileResult.error;
       if (orderResult.error) throw orderResult.error;
@@ -490,9 +627,10 @@ tbody tr:last-child td {
           total: unitPrice > 0 ? Number(item.quantity) * unitPrice : null
         });
       });
-      const paidOrderIds = new Set(paymentResult.data.map((payment) => payment.order_id));
+      const paymentsByOrder = new Map(paymentResult.data.map((payment) => [payment.order_id, payment]));
       orders = orderResult.data.map((order) => {
         const profile = accounts.find((account) => account.id === order.customer_id);
+        const payment = paymentsByOrder.get(order.id) || null;
         return {
           ...order,
           ownerEmail: profile ? profile.email : "",
@@ -502,7 +640,8 @@ tbody tr:last-child td {
           fileName: order.file_name,
           lineItems: itemsByOrder.get(order.id) || [],
           total: Number(order.total),
-          paid: paidOrderIds.has(order.id)
+          paid: Boolean(payment),
+          payment: payment
         };
       });
       const linkedOrder = requestedOrderId
@@ -633,6 +772,8 @@ tbody tr:last-child td {
           : '<tr><td colspan="4">No customer accounts or orders were found.</td></tr>';
         advanceBtn.disabled = true;
         recordPaymentBtn.disabled = true;
+        printReceiptBtn.hidden = true;
+        receipt.hidden = true;
         paymentBadge.textContent = "UNPAID";
         paymentBadge.classList.remove("paid");
         paymentBadge.classList.add("unpaid");
@@ -657,6 +798,9 @@ tbody tr:last-child td {
       recordPaymentBtn.textContent = currentOrder.paid
         ? "Payment Recorded"
         : currentOrder.status === "Cancelled" ? "Order Cancelled" : "Record Cash Payment";
+      printReceiptBtn.hidden = !currentOrder.paid;
+      receipt.hidden = !currentOrder.paid;
+      if (currentOrder.paid) renderReceipt();
 
       const statusIndex = STEPS.findIndex((step) => step.status === currentOrder.status);
       const isComplete = statusIndex >= STEPS.length - 1 || currentOrder.status === "Cancelled";
@@ -764,6 +908,48 @@ tbody tr:last-child td {
         : "Awaiting quote";
       totalRow.appendChild(totalAmount);
       body.appendChild(totalRow);
+    }
+
+    function renderReceipt() {
+      const payment = currentOrder.payment;
+      setText("receiptOrderNumber", "Order RPS-" + String(currentOrder.id).padStart(6, "0"));
+      setText("receiptCustomer", currentOrder.customerName || "—");
+      setText("receiptContact", currentOrder.customerContact || "—");
+      setText("receiptPaymentDate", payment && payment.created_at
+        ? new Date(payment.created_at).toLocaleString()
+        : "—");
+      setText("receiptPaymentMethod", payment && payment.method || "Cash on pickup");
+      setText("receiptAmount", payment && payment.amount !== null && payment.amount !== undefined &&
+        Number.isFinite(Number(payment.amount))
+        ? formatCurrency(Number(payment.amount))
+        : "—");
+
+      const body = document.getElementById("receiptItems");
+      body.replaceChildren();
+      const items = Array.isArray(currentOrder.lineItems) ? currentOrder.lineItems : [];
+      items.forEach((item) => {
+        const row = document.createElement("tr");
+        const values = [
+          item.description || "Print service",
+          String(item.quantity || "—"),
+          typeof item.unitPrice === "number" ? formatCurrency(item.unitPrice) : "—",
+          typeof item.total === "number" ? formatCurrency(item.total) : "—"
+        ];
+        values.forEach((value) => {
+          const cell = document.createElement("td");
+          cell.textContent = value;
+          row.appendChild(cell);
+        });
+        body.appendChild(row);
+      });
+      if (items.length === 0) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 4;
+        cell.textContent = currentOrder.service || "Print service";
+        row.appendChild(cell);
+        body.appendChild(row);
+      }
     }
 
     function renderTracker() {

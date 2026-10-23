@@ -16,6 +16,12 @@
   font-size: 12px;
 }
 
+.order-status-select:disabled {
+  background: #f4f5f7;
+  color: #68718c;
+  cursor: not-allowed;
+}
+
 .badge.cancelled {
   background: #fbe3e1;
   color: #a52b22;
@@ -197,6 +203,15 @@
     const statusSelect = event.target.closest('[data-order-status]');
     if (!statusSelect) return;
 
+    const order = orders.find(function (item) {
+      return String(item.id) === statusSelect.dataset.orderStatus;
+    });
+    if (order && order.status === 'Completed') {
+      alert('Completed orders cannot be changed.');
+      renderOrderPipeline();
+      return;
+    }
+
     try {
       const { error } = await window.richersDb.client
         .from('orders')
@@ -262,7 +277,7 @@
         displayId: 'RPS-' + String(order.id).padStart(6, '0'),
         createdAt: order.created_at,
         fileName: order.file_name,
-        pickup: order.pickup_date
+        pickup: formatPickupDateTime(order.pickup_date)
       };
     });
     const completed = orders.filter(function (order) {
@@ -381,7 +396,9 @@
           '<label class="sr-only" for="status-' + escapeHtml(order.id) +
           '">Update status for ' + escapeHtml(order.id) + '</label>' +
           '<select id="status-' + escapeHtml(order.id) + '" class="order-status-select" data-order-status="' +
-          escapeHtml(order.id) + '">' + options + '</select></td>' +
+          escapeHtml(order.id) + '"' + (status === 'Completed' ? ' disabled' : '') +
+          (status === 'Completed' ? ' title="Completed orders cannot be changed"' : '') +
+          '>' + options + '</select></td>' +
         '</tr>';
     }).join('');
   }
@@ -391,6 +408,26 @@
     if (status === 'Completed') return 'completed';
     if (status === 'Ready for Pickup') return 'pickup';
     return 'printing';
+  }
+
+  function formatPickupDateTime(value) {
+    if (!value) return 'Not specified';
+    const localDateTime = value.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/);
+    const date = localDateTime
+      ? new Date(
+        Number(localDateTime[1]),
+        Number(localDateTime[2]) - 1,
+        Number(localDateTime[3]),
+        Number(localDateTime[4] || 0),
+        Number(localDateTime[5] || 0)
+      )
+      : new Date(value);
+    return Number.isNaN(date.getTime())
+      ? value
+      : date.toLocaleString(undefined, {
+        dateStyle: 'medium',
+        timeStyle: localDateTime && !localDateTime[4] ? undefined : 'short'
+      });
   }
 
   function formatCurrency(amount) {

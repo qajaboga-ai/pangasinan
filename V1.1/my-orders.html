@@ -569,7 +569,7 @@ body {
                 (unitPrice > 0 ? formatCurrency(unitPrice) : 'Awaiting quote') + ')';
             }).join('; ')) +
             detail('Copies', String(order.copies)) +
-            detail('Pickup target', order.pickup_date) +
+            detail('Pickup target', formatPickupDateTime(order.pickup_date)) +
             detail('Paper', order.paper) +
             detail('Color', order.color) +
             detail('Finishing', order.binding) +
@@ -591,6 +591,26 @@ body {
   function detail(label, value) {
     return '<div><span class="order-detail-label">' + escapeHtml(label) +
       '</span><span class="order-detail-value">' + escapeHtml(value || 'Not provided') + '</span></div>';
+  }
+
+  function formatPickupDateTime(value) {
+    if (!value) return 'Not provided';
+    const localDateTime = value.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/);
+    const date = localDateTime
+      ? new Date(
+        Number(localDateTime[1]),
+        Number(localDateTime[2]) - 1,
+        Number(localDateTime[3]),
+        Number(localDateTime[4] || 0),
+        Number(localDateTime[5] || 0)
+      )
+      : new Date(value);
+    return Number.isNaN(date.getTime())
+      ? value
+      : date.toLocaleString(undefined, {
+        dateStyle: 'medium',
+        timeStyle: localDateTime && !localDateTime[4] ? undefined : 'short'
+      });
   }
 
   function escapeHtml(value) {

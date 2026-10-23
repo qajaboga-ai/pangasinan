@@ -118,11 +118,15 @@ as $$
       when 'legal / long document - color' then 'LEGAL-COLOR'
       when 'legal / long document - black & white' then 'LEGAL-BW'
       when 'sticker & label printing - a3' then 'STICKER-A3'
+      when 'sticker & label printing (a3 glossy sheet)' then 'STICKER-A3'
       when 'standard 3×5 ft tarpaulin' then 'TARPAULIN-3X5'
       when 'tarpaulin - 3x5 ft' then 'TARPAULIN-3X5'
       when 'tarpaulin - 2x3 ft' then 'TARPAULIN-2X3'
       when 'tarpaulin - 4x6 ft' then 'TARPAULIN-4X6'
       when 'tarpaulin - 5x8 ft' then 'TARPAULIN-5X8'
+      when 'large-format tarpaulin - 2x3 ft' then 'TARPAULIN-2X3'
+      when 'large-format tarpaulin - 4x6 ft' then 'TARPAULIN-4X6'
+      when 'large-format tarpaulin - 5x8 ft' then 'TARPAULIN-5X8'
       when 'standee (with stand)' then 'STANDEE'
       when 'ring binding w/ clear front cover' then 'BND-RNG-12'
       when 'spiral binding' then 'SPIRAL-BIND'
@@ -213,6 +217,25 @@ create trigger restore_cancelled_order_inventory
 after update of status on public.orders
 for each row execute function public.restore_cancelled_order_inventory();
 alter table public.orders enable trigger restore_cancelled_order_inventory;
+
+create or replace function public.prevent_completed_order_status_changes()
+returns trigger
+language plpgsql
+set search_path = pg_catalog
+as $$
+begin
+  if old.status = 'Completed' and new.status is distinct from old.status then
+    raise exception 'Completed orders cannot be changed';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists prevent_completed_order_status_changes on public.orders;
+create trigger prevent_completed_order_status_changes
+before update of status on public.orders
+for each row execute function public.prevent_completed_order_status_changes();
+alter table public.orders enable trigger prevent_completed_order_status_changes;
 
 insert into public.services (name, description, category, unit, unit_price, active)
 select new_service.name, new_service.description, new_service.category, new_service.unit,

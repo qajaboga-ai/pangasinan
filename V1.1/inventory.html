@@ -389,6 +389,29 @@ document.addEventListener('DOMContentLoaded', async function () {
       }));
       if (error) throw error;
       await reloadItems();
+    } else {
+      const existingCodes = new Set(items.map(function (item) {
+        return item.code.toUpperCase();
+      }));
+      const trackedItems = DEFAULT_PRODUCT_ITEMS.concat(
+        DEFAULT_ITEMS.filter(function (item) { return item.code === 'BND-RNG-12'; })
+      );
+      const missingItems = trackedItems
+        .filter(function (item) { return !existingCodes.has(item.code.toUpperCase()); })
+        .map(function (item) {
+          return {
+            ...item,
+            item_name: item.description,
+            quantity: 0,
+            reorder_level: 10
+          };
+        });
+
+      if (missingItems.length > 0) {
+        const { error } = await window.richersDb.client.from('inventory').insert(missingItems);
+        if (error) throw error;
+        await reloadItems();
+      }
     }
   } catch (error) {
     console.error('Could not load inventory:', error);

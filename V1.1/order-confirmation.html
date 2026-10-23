@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Order Confirmation — Richers Printing</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="footer.css">
+<style>
+:root {
+  --ink: #0d1b3e;
+  --ink-soft: #4b5570;
+  --yellow: #ffd400;
+  --blue: #2f6fed;
+  --green: #1c8a52;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 100% 0, rgba(0, 168, 232, 0.10) 0 180px, transparent 181px),
+    #f6f7fb;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px 32px;
+  border-bottom: 1px solid #e3e7f0;
+  background: rgba(246, 247, 251, 0.95);
+}
+
+.topbar a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.brand {
+  font-family: var(--display);
+  font-weight: 800;
+}
+
+.brand span { color: var(--blue); }
+
+.main {
+  width: min(900px, calc(100% - 40px));
+  margin: 48px auto;
+}
+
+.confirmation-card {
+  padding: clamp(24px, 5vw, 48px);
+  border: 2px solid var(--ink);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 8px 8px 0 var(--yellow);
+}
+
+.confirmation-header { text-align: center; }
+
+.success-mark {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 14px;
+  place-items: center;
+  border-radius: 50%;
+  background: #d9f2e3;
+  color: var(--green);
+  font-size: 34px;
+  font-weight: 800;
+}
+
+h1, h2, p { margin-top: 0; }
+
+h1 {
+  margin-bottom: 8px;
+  font-family: var(--display);
+  font-size: clamp(28px, 5vw, 40px);
+}
+
+.intro {
+  margin-bottom: 28px;
+  color: var(--ink-soft);
+}
+
+.verification-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 28px;
+  align-items: center;
+}
+
+.order-details {
+  margin: 0;
+  border-top: 1px solid #e6e8ee;
+}
+
+.order-details div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 0;
+  border-bottom: 1px solid #e6e8ee;
+}
+
+.order-details dt { color: var(--ink-soft); }
+.order-details dd { margin: 0; font-weight: 700; text-align: right; }
+
+.order-number {
+  color: var(--blue);
+  font-family: var(--display);
+  font-size: 19px;
+}
+
+.qr-panel {
+  padding: 18px;
+  border: 1px dashed #aab4d0;
+  border-radius: 12px;
+  background: #fafbfc;
+  text-align: center;
+}
+
+.qr-panel h2 {
+  margin-bottom: 6px;
+  font-size: 16px;
+}
+
+.qr-image {
+  display: block;
+  width: 210px;
+  height: 210px;
+  max-width: 100%;
+  margin: 12px auto;
+  image-rendering: pixelated;
+}
+
+.qr-note {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.qr-note.warning {
+  margin-top: 8px;
+  color: #8c251f;
+  font-weight: 700;
+}
+
+.next-step {
+  margin: 24px 0;
+  padding: 14px 16px;
+  border-left: 4px solid var(--yellow);
+  border-radius: 6px;
+  background: #fff9d6;
+  color: #4b4a2f;
+  font-size: 14px;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.button {
+  display: inline-block;
+  padding: 11px 18px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--ink);
+  color: #fff !important;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.button.secondary {
+  background: #fff;
+  color: var(--ink) !important;
+}
+
+.error-message {
+  padding: 18px;
+  border: 1px solid #e3a4a0;
+  border-radius: 8px;
+  background: #fff0ef;
+  color: #8c251f;
+}
+
+[hidden] { display: none !important; }
+
+@media (max-width: 680px) {
+  .topbar { padding: 12px 18px; }
+  .main { margin: 28px auto; }
+  .verification-layout { grid-template-columns: 1fr; }
+  .qr-panel { max-width: 340px; width: 100%; margin: 0 auto; }
+}
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <a href="landing.html" class="brand">RICHERS <span>PRINTING</span></a>
+    <a href="my-orders.html#orders">Track Order</a>
+  </header>
+
+  <main class="main">
+    <section class="confirmation-card" id="confirmationCard" hidden>
+      <div class="confirmation-header">
+        <div class="success-mark" aria-hidden="true">✓</div>
+        <h1>Order submitted</h1>
+        <p class="intro">Your order is ready for the final step before payment. Show the order number at pickup and pay at the counter.</p>
+      </div>
+
+      <div class="verification-layout">
+        <div>
+          <h2>Order verification</h2>
+          <dl class="order-details">
+            <div><dt>Order number</dt><dd class="order-number" id="orderNumber"></dd></div>
+            <div><dt>Service</dt><dd id="orderService"></dd></div>
+            <div><dt>Status</dt><dd id="orderStatus"></dd></div>
+            <div><dt>Estimated total</dt><dd id="orderTotal"></dd></div>
+            <div><dt>Target pickup</dt><dd id="orderPickup"></dd></div>
+          </dl>
+        </div>
+
+        <div class="qr-panel">
+          <h2>Verification QR</h2>
+          <img
+            class="qr-image"
+            src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAADcAQMAAAAhlF3CAAAABlBMVEX///8AAABVwtN+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABUElEQVRYheWYsbGDQAxE5SEgpARKoTQozaVcCYQEN5alXR3G8xnn/6TABh4Jy91qhcivWhVV5aHt0shLWrqCG87roCqqT5HpGCvuWTLBRXUfXSHVjQpVHCeEUCgBtItqe6NgJeSDsR1eBsVvlJu90jsMYwRcn3Mxhf64Zu/wq2yZzHrIff1vCBF2PreLYH9HCJIJ4u1LiwLzDmOkSWaBkIhdEFFg3keuE1eoI2is2IMPNH2xlQCmiD9ZIPyOeRdv324UjwXoiFngGkY/wBPoD/UqXwroe3/SMwqUyYwR00Abg3qBS2vrLfe5D/I4ETRP+HRBU6hVHtiKy8SXTCh0rQ7gygc+Z3vLfej2ueDmvxEFrAuWU6GlJIILB/+XMOvFdmAeygbZ/n3mjSB8VagryNm+1ZYKcjtE5LGZ19LvaYxZIPX4fOCQCL+3X3k6hb/qDY+D04Q6C/l2AAAAAElFTkSuQmCC"
+            alt="Demo QR code. Scanning displays that this is not a payment."
+          >
+          <p class="qr-note">This is the existing demo verification QR.</p>
+          <p class="qr-note warning">Not payable: scanning will not send money or mark this order as paid.</p>
+        </div>
+      </div>
+
+      <p class="next-step">Payment is made at the shop when you pick up your order. This page confirms the order only; the shop will confirm the final price and record the payment.</p>
+      <div class="actions">
+        <a class="button" href="my-orders.html#orders">View My Orders</a>
+        <a class="button secondary" href="order.html#orderForm">Place another order</a>
+      </div>
+    </section>
+
+    <p class="error-message" id="pageMessage" role="alert">Verifying your order…</p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="supabase-client.js"></script>
+  <script>
+  (async function () {
+    const message = document.getElementById('pageMessage');
+    const confirmation = document.getElementById('confirmationCard');
+    const orderId = new URLSearchParams(window.location.search).get('id');
+    const numericOrderId = Number(orderId);
+
+    if (!Number.isSafeInteger(numericOrderId) || numericOrderId < 1) {
+      message.textContent = 'This order confirmation link is invalid. Find your order under My Orders.';
+      return;
+    }
+
+    try {
+      const session = await window.richersDb.requireUser();
+      if (!session) return;
+
+      const { data: order, error } = await window.richersDb.client
+        .from('orders')
+        .select('id, customer_id, service, status, pickup_date, total')
+        .eq('id', numericOrderId)
+        .eq('customer_id', session.user.id)
+        .single();
+      if (error) throw error;
+      if (!order) throw new Error('This order could not be found for your account.');
+
+      document.getElementById('orderNumber').textContent =
+        'RPS-' + String(order.id).padStart(6, '0');
+      document.getElementById('orderService').textContent = order.service || 'Printing order';
+      document.getElementById('orderStatus').textContent = order.status || 'Received';
+      document.getElementById('orderTotal').textContent = Number(order.total) > 0
+        ? new Intl.NumberFormat('en-PH', {
+          style: 'currency',
+          currency: 'PHP',
+          minimumFractionDigits: 2
+        }).format(Number(order.total))
+        : 'Awaiting quote';
+      document.getElementById('orderPickup').textContent = formatPickupDateTime(order.pickup_date);
+
+      message.hidden = true;
+      confirmation.hidden = false;
+    } catch (error) {
+      console.error('Could not verify the submitted order:', error);
+      message.textContent = 'We could not verify this order for your account. Check My Orders or try signing in again.';
+      if (error && error.message) {
+        message.textContent += ' ' + error.message;
+      }
+    }
+  })();
+
+  function formatPickupDateTime(value) {
+    if (!value) return 'Not specified';
+    const localDateTime = value.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/);
+    const date = localDateTime
+      ? new Date(
+        Number(localDateTime[1]),
+        Number(localDateTime[2]) - 1,
+        Number(localDateTime[3]),
+        Number(localDateTime[4] || 0),
+        Number(localDateTime[5] || 0)
+      )
+      : new Date(value);
+    return Number.isNaN(date.getTime())
+      ? value
+      : date.toLocaleString(undefined, {
+        dateStyle: 'medium',
+        timeStyle: localDateTime && !localDateTime[4] ? undefined : 'short'
+      });
+  }
+  </script>
+</body>
+</html>
