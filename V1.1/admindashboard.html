@@ -206,8 +206,8 @@
     const order = orders.find(function (item) {
       return String(item.id) === statusSelect.dataset.orderStatus;
     });
-    if (order && order.status === 'Completed') {
-      alert('Completed orders cannot be changed.');
+    if (order && (order.status === 'Completed' || order.status === 'Cancelled')) {
+      alert(order.status + ' orders cannot be changed.');
       renderOrderPipeline();
       return;
     }
@@ -363,6 +363,7 @@
         order.copies + ' copies'
       ].filter(Boolean).join(' · ');
       const status = ORDER_STATUSES.includes(order.status) ? order.status : 'Received';
+      const isLockedStatus = status === 'Completed' || status === 'Cancelled';
       const options = ORDER_STATUSES.map(function (label) {
         return '<option value="' + escapeHtml(label) + '"' +
           (label === status ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
@@ -396,8 +397,8 @@
           '<label class="sr-only" for="status-' + escapeHtml(order.id) +
           '">Update status for ' + escapeHtml(order.id) + '</label>' +
           '<select id="status-' + escapeHtml(order.id) + '" class="order-status-select" data-order-status="' +
-          escapeHtml(order.id) + '"' + (status === 'Completed' ? ' disabled' : '') +
-          (status === 'Completed' ? ' title="Completed orders cannot be changed"' : '') +
+          escapeHtml(order.id) + '"' + (isLockedStatus ? ' disabled' : '') +
+          (isLockedStatus ? ' title="' + escapeHtml(status) + ' orders cannot be changed"' : '') +
           '>' + options + '</select></td>' +
         '</tr>';
     }).join('');
